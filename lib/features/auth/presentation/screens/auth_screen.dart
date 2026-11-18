@@ -21,6 +21,9 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
 
+  /// SĐT đang gõ – giữ lại khi chuyển giữa Đăng nhập và Đăng ký (không giữ mật khẩu).
+  String _phone = '';
+
   void _setMode(bool isLogin) {
     if (isLogin == _isLogin) return;
     context.read<AuthController>().clearErrors();
@@ -84,8 +87,18 @@ class _AuthScreenState extends State<AuthScreen> {
                               children: [...previous, ?current],
                             ),
                             child: _isLogin
-                                ? const LoginForm(key: ValueKey('login'))
-                                : const RegisterForm(key: ValueKey('register')),
+                                ? LoginForm(
+                                    key: const ValueKey('login'),
+                                    initialPhone: _phone,
+                                    onPhoneChanged: (v) => _phone = v,
+                                    onGoToRegister: () => _setMode(false),
+                                  )
+                                : RegisterForm(
+                                    key: const ValueKey('register'),
+                                    initialPhone: _phone,
+                                    onPhoneChanged: (v) => _phone = v,
+                                    onGoToLogin: () => _setMode(true),
+                                  ),
                           ),
                         ),
                       ],

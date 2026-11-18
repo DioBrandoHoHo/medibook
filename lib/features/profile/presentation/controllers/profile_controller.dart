@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/utils/name_utils.dart';
 import '../../../auth/domain/entities/user_gender.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../domain/repositories/profile_repository.dart';
@@ -39,7 +40,7 @@ class ProfileController extends ChangeNotifier {
       await _repository
           .updateProfile(
             uid: user.id,
-            fullName: fullName.trim(),
+            fullName: NameUtils.normalize(fullName),
             email: email.trim(),
             birthDate: birthDate,
             gender: gender,
@@ -47,7 +48,7 @@ class ProfileController extends ChangeNotifier {
           .timeout(saveTimeout, onTimeout: () => throw const NetworkFailure());
       _auth.updateCurrentUser(
         user.withProfile(
-          fullName: fullName.trim(),
+          fullName: NameUtils.normalize(fullName),
           email: email.trim(),
           birthDate: birthDate,
           gender: gender,

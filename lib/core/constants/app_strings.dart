@@ -133,6 +133,11 @@ abstract final class AppStrings {
 
   // Auth – lỗi kiểm tra đầu vào (đặc tả không quy định câu chữ)
   static const errFullNameRequired = 'Vui lòng nhập họ và tên';
+  static const phoneHint = 'VD: 0912 345 678';
+  static const loginWithThisPhone = 'Đăng nhập bằng số này';
+  static const registerWithThisPhone = 'Tạo tài khoản với số này';
+  static const errFullNameLength = 'Họ và tên phải từ 2 đến 50 ký tự';
+  static const errFullNameChars = 'Họ và tên chỉ gồm chữ cái và khoảng trắng';
   static const errPhoneRequired = 'Vui lòng nhập số điện thoại';
   static const errPhoneInvalid = 'Số điện thoại không hợp lệ (VD: 0912345678)';
   static const errPasswordRequired = 'Vui lòng nhập mật khẩu';

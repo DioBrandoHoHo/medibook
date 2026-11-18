@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/utils/name_utils.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/entities/recovery_email.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -61,7 +62,13 @@ class AuthController extends ChangeNotifier {
     required String phone,
     required String password,
   }) =>
-      _run(() => _repository.register(fullName: fullName, phone: phone, password: password));
+      _run(
+        () => _repository.register(
+          fullName: NameUtils.normalize(fullName),
+          phone: phone,
+          password: password,
+        ),
+      );
 
   Future<bool> _run(Future<AppUser> Function() action) async {
     if (_isLoading) return false;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +14,14 @@ import 'password_rules_checklist.dart';
 
 /// Form Đăng ký Customer (Mục 4): họ tên, SĐT, mật khẩu, xác nhận mật khẩu.
 class RegisterForm extends StatefulWidget {
-  const RegisterForm({super.key});
+  const RegisterForm({super.key, this.initialPhone = '', this.onPhoneChanged, this.onGoToLogin});
+
+  /// SĐT đang gõ ở chế độ kia (giữ lại khi chuyển Đăng nhập -> Đăng ký).
+  final String initialPhone;
+  final ValueChanged<String>? onPhoneChanged;
+
+  /// Chuyển sang Đăng nhập (khi số đã được đăng ký).
+  final VoidCallback? onGoToLogin;
 
   @override
   State<RegisterForm> createState() => _RegisterFormState();
@@ -23,7 +31,7 @@ class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
   final _confirmKey = GlobalKey<FormFieldState<String>>();
   final _fullName = TextEditingController();
-  final _phone = TextEditingController();
+  late final _phone = TextEditingController(text: widget.initialPhone);
   final _password = TextEditingController();
   final _confirm = TextEditingController();
   PasswordRules _rules = PasswordRules.check('');
@@ -57,6 +65,7 @@ class _RegisterFormState extends State<RegisterForm> {
       password: _password.text,
     );
     if (!mounted || !ok) return;
+    TextInput.finishAutofillContext(); // cho trình quản lý mật khẩu lưu tài khoản mới
     context.go(RouteGuard.afterAuth(auth.currentUser!));
   }
 
@@ -66,56 +75,71 @@ class _RegisterFormState extends State<RegisterForm> {
     return Form(
       key: _formKey,
       autovalidateMode: _submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AuthErrorBanner(message: auth.generalError),
-          TextFormField(
-            controller: _fullName,
-            textCapitalization: TextCapitalization.words,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.name],
-            validator: Validators.fullName,
-            decoration: const InputDecoration(
-              labelText: AppStrings.fullName,
-              prefixIcon: Icon(Icons.person_outline_rounded),
+      child: AutofillGroup(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthErrorBanner(message: auth.generalError),
+            TextFormField(
+              controller: _fullName,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.name],
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(Validators.fullNameMaxLength + 10),
+              ],
+              validator: Validators.fullName,
+              decoration: const InputDecoration(
+                labelText: AppStrings.fullName,
+                prefixIcon: Icon(Icons.person_outline_rounded),
+              ),
             ),
-          ),
-          const SizedBox(height: 14),
-          PhoneField(
-            controller: _phone,
-            validator: Validators.phone,
-            serverError: auth.phoneError,
-            onChanged: (_) => auth.clearErrors(),
-          ),
-          const SizedBox(height: 14),
-          PasswordField(
-            key: const ValueKey('register-password'),
-            controller: _password,
-            label: AppStrings.password,
-            validator: Validators.newPassword,
-            onChanged: _onPasswordChanged,
-          ),
-          const SizedBox(height: 10),
-          PasswordRulesChecklist(rules: _rules),
-          const SizedBox(height: 14),
-          PasswordField(
-            key: const ValueKey('register-confirm'),
-            fieldKey: _confirmKey,
-            controller: _confirm,
-            label: AppStrings.confirmPassword,
-            textInputAction: TextInputAction.done,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: (v) => Validators.confirmPassword(v, _password.text),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 24),
-          AuthSubmitButton(
-            label: AppStrings.register,
-            isLoading: auth.isLoading,
-            onPressed: _submit,
-          ),
-        ],
+            const SizedBox(height: 14),
+            PhoneField(
+              controller: _phone,
+              validator: Validators.phone,
+              serverError: auth.phoneError,
+              onChanged: (value) {
+                auth.clearErrors();
+                widget.onPhoneChanged?.call(value);
+              },
+            ),
+            if (auth.phoneError == AppStrings.errPhoneExists && widget.onGoToLogin != null)
+              PhoneShortcut(
+                key: const ValueKey('goto_login'),
+                label: AppStrings.loginWithThisPhone,
+                onTap: widget.onGoToLogin!,
+              ),
+            const SizedBox(height: 14),
+            PasswordField(
+              key: const ValueKey('register-password'),
+              controller: _password,
+              label: AppStrings.password,
+              autofillHints: const [AutofillHints.newPassword],
+              validator: Validators.newPassword,
+              onChanged: _onPasswordChanged,
+            ),
+            const SizedBox(height: 10),
+            PasswordRulesChecklist(rules: _rules),
+            const SizedBox(height: 14),
+            PasswordField(
+              key: const ValueKey('register-confirm'),
+              fieldKey: _confirmKey,
+              controller: _confirm,
+              label: AppStrings.confirmPassword,
+              textInputAction: TextInputAction.done,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              validator: (v) => Validators.confirmPassword(v, _password.text),
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: 24),
+            AuthSubmitButton(
+              label: AppStrings.register,
+              isLoading: auth.isLoading,
+              onPressed: _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,7 @@
 abstract final class NameUtils {
+  /// Bỏ khoảng trắng thừa: "  nguyễn   văn  bình " -> "nguyễn văn bình". Dùng trước khi lưu họ tên.
+  static String normalize(String fullName) => fullName.trim().split(RegExp(r'\s+')).join(' ');
+
   /// Chữ cái đầu của TÊN (từ cuối cùng trong họ tên tiếng Việt) để hiện thay ảnh đại diện.
   /// VD: "Nguyễn Thị Mai" -> "M". Tên rỗng -> "?".
   static String initial(String fullName) {

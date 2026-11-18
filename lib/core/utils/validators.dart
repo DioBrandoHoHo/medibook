@@ -1,5 +1,6 @@
 import '../constants/app_strings.dart';
 import 'app_date_utils.dart';
+import 'name_utils.dart';
 import 'phone_utils.dart';
 
 /// Trạng thái từng điều kiện mật khẩu (Mục 4.2) – UI dùng để hiển thị checklist.
@@ -32,8 +33,24 @@ class PasswordRules {
 /// Các hàm validate trả về `null` khi hợp lệ, hoặc thông báo lỗi.
 /// Dùng trực tiếp làm `validator` của TextFormField.
 abstract final class Validators {
+  static const fullNameMinLength = 2;
+  static const fullNameMaxLength = 50;
+
+  /// Chữ cái mọi ngôn ngữ (kể cả tiếng Việt có dấu, dấu tổ hợp), khoảng trắng, ' - .
+  static final _nameChars = RegExp(r"^[\p{L}\p{M}\s'.\-]+$", unicode: true);
+  static final _hasLetter = RegExp(r'\p{L}', unicode: true);
+
+  /// Họ tên (Đăng ký + Cập nhật thông tin): bắt buộc; sau khi bỏ khoảng trắng thừa dài
+  /// 2–50 ký tự; chỉ gồm chữ cái, khoảng trắng và ' - . (không số, không ký hiệu khác).
   static String? fullName(String? value) {
     if (value == null || value.trim().isEmpty) return AppStrings.errFullNameRequired;
+    final name = NameUtils.normalize(value);
+    if (name.length < fullNameMinLength || name.length > fullNameMaxLength) {
+      return AppStrings.errFullNameLength;
+    }
+    if (!_nameChars.hasMatch(name) || !_hasLetter.hasMatch(name)) {
+      return AppStrings.errFullNameChars;
+    }
     return null;
   }
 

@@ -15,6 +15,7 @@ class PasswordField extends StatefulWidget {
     this.textInputAction = TextInputAction.next,
     this.onSubmitted,
     this.autovalidateMode,
+    this.autofillHints,
   });
 
   final TextEditingController controller;
@@ -25,6 +26,10 @@ class PasswordField extends StatefulWidget {
   final TextInputAction textInputAction;
   final ValueChanged<String>? onSubmitted;
   final AutovalidateMode? autovalidateMode;
+
+  /// Gợi ý cho trình quản lý mật khẩu của điện thoại (VD [AutofillHints.password]).
+  /// `null` = không gợi ý (các màn khác giữ nguyên hành vi cũ).
+  final Iterable<String>? autofillHints;
 
   @override
   State<PasswordField> createState() => _PasswordFieldState();
@@ -46,6 +51,7 @@ class _PasswordFieldState extends State<PasswordField> {
       onFieldSubmitted: widget.onSubmitted,
       validator: widget.validator,
       autovalidateMode: widget.autovalidateMode,
+      autofillHints: widget.autofillHints,
       decoration: InputDecoration(
         labelText: widget.label,
         prefixIcon: const Icon(Icons.lock_outline_rounded),

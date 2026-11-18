@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +14,14 @@ import 'password_field.dart';
 
 /// Form Đăng nhập (Mục 5): SĐT + mật khẩu.
 class LoginForm extends StatefulWidget {
-  const LoginForm({super.key});
+  const LoginForm({super.key, this.initialPhone = '', this.onPhoneChanged, this.onGoToRegister});
+
+  /// SĐT đang gõ ở chế độ kia (giữ lại khi chuyển Đăng ký -> Đăng nhập).
+  final String initialPhone;
+  final ValueChanged<String>? onPhoneChanged;
+
+  /// Chuyển sang Đăng ký (khi số chưa được đăng ký).
+  final VoidCallback? onGoToRegister;
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -21,7 +29,7 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
-  final _phone = TextEditingController();
+  late final _phone = TextEditingController(text: widget.initialPhone);
   final _password = TextEditingController();
   bool _submitted = false;
 
@@ -40,6 +48,8 @@ class _LoginFormState extends State<LoginForm> {
     final auth = context.read<AuthController>();
     final ok = await auth.login(phone: _phone.text, password: _password.text);
     if (!mounted || !ok) return;
+    // Báo trình quản lý mật khẩu lưu SĐT + mật khẩu vừa đăng nhập thành công.
+    TextInput.finishAutofillContext();
     context.go(RouteGuard.afterAuth(auth.currentUser!));
   }
 
@@ -49,42 +59,55 @@ class _LoginFormState extends State<LoginForm> {
     return Form(
       key: _formKey,
       autovalidateMode: _submitted ? AutovalidateMode.onUserInteraction : AutovalidateMode.disabled,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AuthErrorBanner(message: auth.generalError),
-          PhoneField(
-            controller: _phone,
-            validator: Validators.phone,
-            serverError: auth.phoneError,
-            onChanged: (_) => auth.clearErrors(),
-          ),
-          const SizedBox(height: 14),
-          PasswordField(
-            controller: _password,
-            label: AppStrings.password,
-            validator: Validators.loginPassword,
-            textInputAction: TextInputAction.done,
-            onChanged: (_) => auth.clearErrors(),
-            onSubmitted: (_) => _submit(),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              key: const ValueKey('forgot_password'),
-              onPressed: auth.isLoading
-                  ? null
-                  : () => ForgotPasswordScreen.open(context, initialPhone: _phone.text),
-              child: const Text(AppStrings.forgotPassword),
+      child: AutofillGroup(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthErrorBanner(message: auth.generalError),
+            PhoneField(
+              controller: _phone,
+              validator: Validators.phone,
+              serverError: auth.phoneError,
+              onChanged: (value) {
+                auth.clearErrors();
+                widget.onPhoneChanged?.call(value);
+              },
             ),
-          ),
-          const SizedBox(height: 10),
-          AuthSubmitButton(
-            label: AppStrings.login,
-            isLoading: auth.isLoading,
-            onPressed: _submit,
-          ),
-        ],
+            if (auth.phoneError == AppStrings.errPhoneNotRegistered &&
+                widget.onGoToRegister != null)
+              PhoneShortcut(
+                key: const ValueKey('goto_register'),
+                label: AppStrings.registerWithThisPhone,
+                onTap: widget.onGoToRegister!,
+              ),
+            const SizedBox(height: 14),
+            PasswordField(
+              controller: _password,
+              label: AppStrings.password,
+              autofillHints: const [AutofillHints.password],
+              validator: Validators.loginPassword,
+              textInputAction: TextInputAction.done,
+              onChanged: (_) => auth.clearErrors(),
+              onSubmitted: (_) => _submit(),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                key: const ValueKey('forgot_password'),
+                onPressed: auth.isLoading
+                    ? null
+                    : () => ForgotPasswordScreen.open(context, initialPhone: _phone.text),
+                child: const Text(AppStrings.forgotPassword),
+              ),
+            ),
+            const SizedBox(height: 10),
+            AuthSubmitButton(
+              label: AppStrings.login,
+              isLoading: auth.isLoading,
+              onPressed: _submit,
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -35,8 +35,34 @@ class PhoneField extends StatelessWidget {
       validator: validator,
       decoration: InputDecoration(
         labelText: AppStrings.phone,
+        hintText: AppStrings.phoneHint,
         prefixIcon: const Icon(Icons.phone_iphone_rounded),
         errorText: serverError,
+      ),
+    );
+  }
+}
+
+/// Lối tắt nhỏ ngay dưới ô SĐT khi hệ thống báo số đã / chưa đăng ký
+/// (VD "Đăng nhập bằng số này"). Bấm -> chuyển chế độ, SĐT được giữ nguyên.
+class PhoneShortcut extends StatelessWidget {
+  const PhoneShortcut({super.key, required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: TextButton.icon(
+        onPressed: onTap,
+        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          visualDensity: VisualDensity.compact,
+        ),
       ),
     );
   }
