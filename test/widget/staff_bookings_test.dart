@@ -4,7 +4,9 @@ import 'package:medibook/core/constants/app_strings.dart';
 import 'package:medibook/core/errors/app_failure.dart';
 import 'package:medibook/features/appointments/domain/entities/appointment.dart';
 import 'package:medibook/features/appointments/domain/entities/appointment_status.dart';
+import 'package:medibook/features/appointments/presentation/controllers/appointments_controller.dart';
 import 'package:medibook/features/appointments/presentation/widgets/status_chip.dart';
+import 'package:provider/provider.dart';
 import 'package:medibook/features/auth/domain/entities/user_role.dart';
 
 import '../mocks/fake_clinic_repositories.dart';
@@ -109,12 +111,13 @@ void main() {
 
     expect(find.text('Hôm nay, 14/11/2026'), findsOneWidget);
     expect(_visibleCardIds(tester).take(3), ['t1', 't2', 't3']);
-    // Thẻ hiện đủ thông tin: tên, dịch vụ, giờ + ngày, mã lịch, trạng thái tiếng Việt.
+    // Thẻ hiện đủ thông tin: tên, dịch vụ, giờ, mã lịch, trạng thái tiếng Việt.
     final t3 = _card('t3');
     expect(find.descendant(of: t3, matching: find.text('Trần Văn Minh')), findsOneWidget);
     expect(find.descendant(of: t3, matching: find.text('Khám da liễu')), findsOneWidget);
-    expect(find.descendant(of: t3, matching: find.text('11:00 – 11:30  •  14/11/2026')),
-        findsOneWidget);
+    // Lịch hôm nay chưa tới giờ: giờ + thời gian còn lại (ngày đã có ở tiêu đề "Hôm nay").
+    expect(find.descendant(of: t3, matching: find.text('11:00 – 11:30  •  ')), findsOneWidget);
+    expect(_textOf(tester, 'starts_in_t3'), 'còn 1 giờ');
     expect(find.descendant(of: t3, matching: find.text('#T3')), findsOneWidget);
     expect(find.descendant(of: t3, matching: find.text('M')), findsOneWidget); // chữ cái đại diện
     expect(tester.widget<StatusChip>(find.descendant(of: t3, matching: find.byType(StatusChip))).status,
@@ -420,5 +423,177 @@ void main() {
     await _openTab(tester, AppStrings.tabStaffBookings);
     await _selectFilter(tester, 'pending');
     expect(_visibleCardIds(tester), ['m1']);
+  });
+
+  group('Nâng cấp Lượt 19', () {
+    /// Dữ liệu có lịch cũ (đủ để danh sách "Tất cả" mở ở mốc hôm nay) + 1 lịch chờ đã quá giờ.
+    List<Appointment> withHistory() => [
+          for (var d = 1; d <= 8; d++)
+            appt('old$d', DateTime(2026, 11, 14 - d, 9),
+                name: 'Khách cũ $d', status: AppointmentStatus.confirmed),
+          appt('late', DateTime(2026, 11, 13, 15), name: 'Khách quá giờ', doctorId: 'd9'),
+          appt('doc', _tomorrow(10),
+              name: 'Khách có bác sĩ', doctorId: 'd8', status: AppointmentStatus.confirmed),
+          ..._sample(),
+        ];
+
+    testWidgets('thẻ: tên bác sĩ, giờ không lặp ngày, "còn X phút"; số lịch theo ngày',
+        (tester) async {
+      await _pumpStaff(
+        tester,
+        FakeAppointmentRepository(initial: [
+          appt('a1', _today(11), name: 'Có bác sĩ', doctorId: 'd1'),
+          appt('a2', _today(12), name: 'Không bác sĩ', status: AppointmentStatus.confirmed),
+          appt('b1', _tomorrow(8), name: 'Ngày mai'),
+        ]),
+      );
+      await _openTab(tester, AppStrings.tabStaffBookings);
+
+      expect(find.descendant(of: _card('a1'), matching: find.text('BS. d1')), findsOneWidget);
+      expect(find.byKey(const ValueKey('tile_doctor_a2')), findsNothing);
+      expect(_textOf(tester, 'starts_in_a1'), 'còn 1 giờ');
+      // Lịch ngày mai: chỉ giờ, ngày đã có ở tiêu đề phía trên.
+      expect(find.descendant(of: _card('b1'), matching: find.text('08:00 – 08:30')),
+          findsOneWidget);
+      expect(_textOf(tester, 'day_count_2026-11-14'), AppStrings.dayCount(2));
+      expect(_textOf(tester, 'day_count_2026-11-15'), AppStrings.dayCount(1));
+    });
+
+    testWidgets('lịch chờ có nút nhanh; lịch đã xử lý không còn nút "Xem chi tiết" thừa',
+        (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: _sample()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+
+      expect(find.byKey(const ValueKey('quick_confirm_t3')), findsOneWidget);
+      expect(find.descendant(of: _card('t1'), matching: find.text(AppStrings.viewDetail)),
+          findsNothing);
+      // Bấm thẻ đã xử lý vẫn mở Chi tiết.
+      await tester.tap(find.byKey(const ValueKey('appointment_t1')));
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.appointmentDetail), findsOneWidget);
+    });
+
+    testWidgets('lịch chờ đã quá giờ bị ẩn khỏi Lịch đặt (mọi bộ lọc, cả khi tìm đích danh)',
+        (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: withHistory()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+
+      expect(_textOf(tester, 'filter_count_all'), '15'); // 8 cũ + 6 mẫu + "doc", không có "late"
+      expect(_textOf(tester, 'filter_count_pending'), '2');
+      expect(_card('late'), findsNothing);
+      await _selectFilter(tester, 'pending');
+      expect(_visibleCardIds(tester), ['t3', 'm1']);
+      await tester.tap(find.byKey(const ValueKey('search_button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('search_field')), 'qua gio');
+      await tester.pumpAndSettle();
+      expect(find.text(AppStrings.bookingsEmptyFiltered), findsOneWidget);
+    });
+
+    testWidgets('lịch vừa quá giờ khi đang mở Chi tiết -> mất nút xử lý, báo hết hiệu lực',
+        (tester) async {
+      var clock = _now;
+      final repo = FakeAppointmentRepository(initial: _sample());
+      final auth = FakeAuthRepository()
+        ..seed(
+          phone: '0900000001',
+          password: 'Staff@123',
+          fullName: 'Trần Thu Trang',
+          role: UserRole.staff,
+          signedIn: true,
+        );
+      await pumpApp(tester, auth, appointmentRepo: repo, clock: () => clock);
+      await _openTab(tester, AppStrings.tabStaffBookings);
+      await tester.tap(find.byKey(const ValueKey('appointment_t3'))); // chờ, 11:00
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('confirm_button')), findsOneWidget);
+
+      clock = DateTime(2026, 11, 14, 11, 5);
+      tester.element(find.byKey(const ValueKey('confirm_button')))
+          .read<AppointmentsController>()
+          .refreshClock();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('confirm_button')), findsNothing);
+      expect(find.byKey(const ValueKey('expired_note')), findsOneWidget);
+      // Trạng thái lưu trên nguồn dữ liệu không bị đổi.
+      expect(repo.items.firstWhere((a) => a.id == 't3').status, AppointmentStatus.pending);
+    });
+
+    testWidgets('tìm theo tên bác sĩ (không dấu)', (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: withHistory()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+      await tester.tap(find.byKey(const ValueKey('search_button')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('search_field')), 'bs. D8');
+      await tester.pumpAndSettle();
+      expect(_textOf(tester, 'booking_count'), AppStrings.bookingCount(1));
+      expect(_card('doc'), findsOneWidget);
+    });
+
+    testWidgets('bảng lọc trạng thái hiện số lịch của từng trạng thái trong bộ lọc đang chọn',
+        (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: _sample()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+      await _selectFilter(tester, 'today');
+      await tester.tap(find.byKey(const ValueKey('status_filter_button')));
+      await tester.pumpAndSettle();
+      // Hôm nay: t1 xác nhận, t2 hủy, t3 chờ, t4 từ chối.
+      expect(find.text('${AppStrings.statusPending}  1'), findsOneWidget);
+      expect(find.text('${AppStrings.statusConfirmed}  1'), findsOneWidget);
+      expect(find.text('${AppStrings.statusCancelled}  1'), findsOneWidget);
+      expect(find.text('${AppStrings.statusRejected}  1'), findsOneWidget);
+      await tester.tapAt(const Offset(180, 100)); // đóng bảng
+      await tester.pumpAndSettle();
+
+      // Đang ở "Chờ xác nhận": chọn trạng thái sẽ chuyển sang "Tất cả" -> số đếm theo "Tất cả".
+      await _selectFilter(tester, 'pending');
+      await tester.tap(find.byKey(const ValueKey('status_filter_button')));
+      await tester.pumpAndSettle();
+      expect(find.text('${AppStrings.statusConfirmed}  2'), findsOneWidget); // t1, m2
+    });
+
+    testWidgets('"Tất cả": cuộn xa -> nút "Hôm nay" đưa về mốc hôm nay', (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: withHistory()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+      expect(find.byKey(const ValueKey('back_to_today')), findsNothing);
+
+      final scrollable = find.descendant(
+          of: find.byKey(const ValueKey('bookings_list')), matching: find.byType(Scrollable));
+      await tester.scrollUntilVisible(_card('old8'), -300, scrollable: scrollable);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('back_to_today')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('back_to_today')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('earlier_hint')), findsOneWidget);
+      expect(find.text('Hôm nay, 14/11/2026'), findsOneWidget);
+      expect(find.byKey(const ValueKey('back_to_today')), findsNothing);
+    });
+
+    testWidgets('mở lại từ Tổng quan -> về vị trí đầu, không giữ chỗ cuộn cũ', (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: withHistory()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+      final scrollable = find.descendant(
+          of: find.byKey(const ValueKey('bookings_list')), matching: find.byType(Scrollable));
+      await tester.scrollUntilVisible(_card('old8'), -300, scrollable: scrollable);
+      await tester.pumpAndSettle();
+
+      await _openTab(tester, AppStrings.tabOverview);
+      await tester.ensureVisible(find.byKey(const ValueKey('see_all')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('see_all')));
+      await tester.pumpAndSettle();
+      final listTop = tester.getTopLeft(find.byKey(const ValueKey('bookings_list'))).dy;
+      expect(tester.getTopLeft(find.byKey(const ValueKey('earlier_hint'))).dy, closeTo(listTop, 1));
+    });
+
+    testWidgets('kéo xuống để làm mới không làm mất danh sách', (tester) async {
+      await _pumpStaff(tester, FakeAppointmentRepository(initial: _sample()));
+      await _openTab(tester, AppStrings.tabStaffBookings);
+      await _selectFilter(tester, 'today');
+      await tester.fling(_card('t1'), const Offset(0, 400), 1000);
+      await tester.pumpAndSettle();
+      expect(_textOf(tester, 'booking_count'), AppStrings.bookingCount(4));
+    });
   });
 }

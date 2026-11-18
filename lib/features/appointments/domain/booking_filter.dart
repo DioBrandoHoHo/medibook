@@ -10,7 +10,9 @@ enum BookingFilter { all, today, pending }
 ///
 /// - [filter]: Tất cả / Hôm nay (mọi trạng thái) / Chờ xác nhận (mọi ngày).
 /// - [statuses]: lọc nâng cao theo trạng thái; rỗng = không lọc thêm.
-/// - [query]: tìm theo tên khách, dịch vụ hoặc mã lịch (không phân biệt hoa thường / dấu).
+/// - [query]: tìm theo tên khách, dịch vụ, tên bác sĩ hoặc mã lịch (không phân biệt hoa thường / dấu).
+///
+/// Lịch chờ đã quá giờ (`isOverdueAt`) bị bỏ khỏi MỌI bộ lọc (quy tắc chốt 18/11/2026).
 ///
 /// Kết quả luôn sắp theo thời điểm bắt đầu (kiểu DateTime, không so chuỗi) tăng dần.
 List<Appointment> applyBookingFilter(
@@ -22,22 +24,27 @@ List<Appointment> applyBookingFilter(
 }) {
   final needle = TextUtils.normalize(query);
   bool matchesFilter(Appointment a) => switch (filter) {
-        BookingFilter.all => true,
-        BookingFilter.today => AppDateUtils.isSameDay(a.startAt, now),
-        BookingFilter.pending => a.isPending,
-      };
+    BookingFilter.all => true,
+    BookingFilter.today => AppDateUtils.isSameDay(a.startAt, now),
+    BookingFilter.pending => a.isPending,
+  };
   bool matchesQuery(Appointment a) =>
       needle.isEmpty ||
       TextUtils.normalize(a.customerName).contains(needle) ||
       TextUtils.normalize(a.serviceName).contains(needle) ||
+      TextUtils.normalize(a.doctorName ?? '').contains(needle) ||
       a.id.toLowerCase().contains(needle) ||
       a.shortCode.toLowerCase().contains(needle);
 
   return all
-      .where((a) =>
-          matchesFilter(a) &&
-          (statuses.isEmpty || statuses.contains(a.status)) &&
-          matchesQuery(a))
+      .where(
+        (a) =>
+            // Lịch chờ đã quá giờ đã hết hiệu lực phía nhân viên -> không hiện ở bộ lọc nào.
+            a.isStaffVisibleAt(now) &&
+            matchesFilter(a) &&
+            (statuses.isEmpty || statuses.contains(a.status)) &&
+            matchesQuery(a),
+      )
       .toList()
     ..sort((a, b) => a.startAt.compareTo(b.startAt));
 }
@@ -62,4 +69,14 @@ List<BookingDayGroup> groupBookingsByDay(List<Appointment> sorted) {
     }
   }
   return groups;
+}
+
+/// Đếm số lịch theo từng trạng thái trong [items] (VD danh sách sau bộ lọc chính) –
+/// để bảng "Lọc theo trạng thái" hiện số lịch bên cạnh mỗi lựa chọn.
+Map<AppointmentStatus, int> countByStatus(Iterable<Appointment> items) {
+  final counts = {for (final s in AppointmentStatus.values) s: 0};
+  for (final a in items) {
+    counts[a.status] = counts[a.status]! + 1;
+  }
+  return counts;
 }

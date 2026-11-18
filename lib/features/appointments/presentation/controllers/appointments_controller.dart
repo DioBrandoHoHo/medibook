@@ -143,6 +143,8 @@ class AppointmentsController extends ChangeNotifier {
     // Lịch đã được xử lý ở nơi khác (VD khách vừa hủy) -> báo rõ, không ghi đè.
     final current = byId(id);
     if (current != null && !current.isPending) return AppStrings.errAlreadyHandled;
+    // Lịch chờ đã quá giờ hết hiệu lực (quy tắc 18/11/2026) -> không xác nhận / từ chối nữa.
+    if (current != null && current.isOverdueAt(now)) return AppStrings.errExpired;
     try {
       // Chỉ ghi vào nguồn dữ liệu. Giao diện tự đổi khi stream phát danh sách mới.
       await _repository.updateStatus(id, status);

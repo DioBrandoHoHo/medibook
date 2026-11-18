@@ -73,15 +73,14 @@ Future<bool> runAppointmentAction(
   );
   if (agreed != true) return false;
 
-  final error =
-      confirm ? await controller.confirm(appointment.id) : await controller.reject(appointment.id);
+  final error = confirm
+      ? await controller.confirm(appointment.id)
+      : await controller.reject(appointment.id);
   messenger
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text(
-          error ?? (confirm ? AppStrings.confirmedDone : AppStrings.rejectedDone),
-        ),
+        content: Text(error ?? (confirm ? AppStrings.confirmedDone : AppStrings.rejectedDone)),
       ),
     );
   return error == null;

@@ -342,29 +342,23 @@ void main() {
       expect(tester.getBottomLeft(card).dy, lessThan(600));
       expect(_textOf(tester, 'pending_breakdown'), 'Hôm nay 1  •  Ngày khác 1');
       expect(_textOf(tester, 'pending_next'), 'Gần nhất: 11:00, Hôm nay');
-      expect(find.byKey(const ValueKey('pending_overdue')), findsNothing);
     });
 
-    testWidgets('lịch chờ đã quá giờ -> cảnh báo đỏ; xử lý xong thì cảnh báo biến mất', (
-      tester,
-    ) async {
-      final repo = FakeAppointmentRepository(
-        initial: [
-          ..._sample(),
-          appt('y1', DateTime(2026, 11, 13, 15), name: 'Khách hôm qua'),
-        ],
-      );
+    testWidgets('lịch chờ đã quá giờ: không tính vào thẻ cần xử lý, chấm số tab, chỉ số hôm nay',
+        (tester) async {
+      final repo = FakeAppointmentRepository(initial: [
+        ..._sample(),
+        appt('y1', DateTime(2026, 11, 13, 15), name: 'Khách hôm qua'),
+        appt('y2', _today(9, 30), name: 'Khách sáng nay'),
+      ]);
       await _pumpStaffHome(tester, appointments: repo);
 
-      expect(find.text(AppStrings.pendingNotice(3)), findsOneWidget);
-      expect(_textOf(tester, 'pending_breakdown'), 'Hôm nay 1  •  Ngày khác 2');
-      expect(_textOf(tester, 'pending_overdue'), AppStrings.pendingOverdue(1));
-
-      await repo.updateStatus('y1', AppointmentStatus.rejected);
-      await tester.pumpAndSettle();
+      // Như khi không có y1, y2: 2 lịch chờ còn hiệu lực (t3 hôm nay, m1 ngày mai).
       expect(find.text(AppStrings.pendingNotice(2)), findsOneWidget);
-      expect(find.byKey(const ValueKey('pending_overdue')), findsNothing);
-      expect(find.byKey(const ValueKey('pending_next')), findsOneWidget);
+      expect(_textOf(tester, 'pending_breakdown'), 'Hôm nay 1  •  Ngày khác 1');
+      expect(_textOf(tester, 'tab_pending_badge'), '2');
+      expect(_textOf(tester, 'stat_today_total'), '4');
+      expect(_textOf(tester, 'stat_pending'), '1');
     });
 
     testWidgets('còn lại hôm nay + thanh tỉ lệ trạng thái', (tester) async {

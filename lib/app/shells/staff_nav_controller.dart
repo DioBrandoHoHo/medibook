@@ -20,6 +20,11 @@ class StaffNavController extends ChangeNotifier {
   String _query = '';
 
   int get index => _index;
+
+  /// Tăng mỗi lần nơi khác (Tổng quan) mở Lịch đặt với bộ lọc mới -> màn Lịch đặt cuộn về
+  /// vị trí mở đầu (đầu danh sách, hoặc mốc hôm nay của "Tất cả") thay vì giữ chỗ cuộn cũ.
+  int get openRequest => _openRequest;
+  int _openRequest = 0;
   BookingFilter get filter => _filter;
 
   /// Lọc nâng cao theo trạng thái (rỗng = mọi trạng thái).
@@ -39,6 +44,7 @@ class StaffNavController extends ChangeNotifier {
     _statuses = filter == BookingFilter.pending ? const {} : Set.unmodifiable(statuses);
     _query = '';
     _index = bookingsTab;
+    _openRequest++;
     notifyListeners();
   }
 

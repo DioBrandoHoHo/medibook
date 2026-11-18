@@ -7,8 +7,7 @@ import '../../domain/staff_home_summary.dart';
 
 /// Thẻ "Có X lịch đặt mới cần xử lý". X = số lịch Pending ở mọi ngày.
 ///
-/// Dưới tiêu đề có thêm dòng chia nhỏ X (hôm nay / ngày khác) và cảnh báo lịch đã quá giờ
-/// hoặc lịch chờ gần nhất – tất cả lấy từ [StaffHomeSummary], thẻ không tự đếm.
+/// Dưới tiêu đề có thêm dòng chia nhỏ X (hôm nay / ngày khác) và lịch chờ gần nhất – tất cả lấy từ [StaffHomeSummary], thẻ không tự đếm.
 /// Nhờ dòng "Hôm nay …" người dùng hiểu vì sao X có thể lớn hơn chỉ số "Chờ xác nhận" hôm nay.
 class PendingNoticeCard extends StatelessWidget {
   const PendingNoticeCard({
@@ -96,28 +95,7 @@ class PendingNoticeCard extends StatelessWidget {
         '${AppStrings.pendingOtherDays(summary.pendingOtherDays)}',
         key: const ValueKey('pending_breakdown'),
       ),
-      if (summary.pendingOverdue > 0)
-        Padding(
-          padding: const EdgeInsets.only(top: 3),
-          child: Row(
-            children: [
-              const Icon(Icons.error_outline_rounded, size: 15, color: AppColors.error),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  AppStrings.pendingOverdue(summary.pendingOverdue),
-                  key: const ValueKey('pending_overdue'),
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.error,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )
-      else if (next != null)
+      if (next != null)
         _line(
           AppStrings.nextPendingAt(
             AppDateUtils.shortDayLabel(next.startAt, now),

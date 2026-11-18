@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
+import '../../features/appointments/domain/booking_filter.dart';
 import '../../features/appointments/presentation/controllers/appointments_controller.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/booking/presentation/controllers/doctors_controller.dart';
@@ -154,7 +155,8 @@ class _StaffShellState extends State<StaffShell> with WidgetsBindingObserver {
 
   /// Số lịch đang chờ xác nhận ở mọi ngày – đếm từ danh sách lịch hẹn chung,
   /// nên luôn bằng số trên thẻ "Có X lịch đặt mới cần xử lý" và bộ lọc Chờ xác nhận.
-  int get _pendingCount => _appointments.items.where((a) => a.isPending).length;
+  int get _pendingCount =>
+      applyBookingFilter(_appointments.items, BookingFilter.pending, _appointments.now).length;
 
   static Color _tabColor(Set<WidgetState> states) =>
       states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondary;

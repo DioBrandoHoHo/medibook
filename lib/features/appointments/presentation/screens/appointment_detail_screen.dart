@@ -36,6 +36,7 @@ class AppointmentDetailScreen extends StatefulWidget {
 
 class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
   bool _busy = false;
+  DateTime _now = DateTime.now();
 
   Future<void> _handle(Appointment appointment, {required bool confirm}) async {
     setState(() => _busy = true);
@@ -45,7 +46,9 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appointment = context.watch<AppointmentsController>().byId(widget.appointmentId);
+    final controller = context.watch<AppointmentsController>();
+    final appointment = controller.byId(widget.appointmentId);
+    _now = controller.now;
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
@@ -60,9 +63,11 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
               ),
             )
           : _buildContent(appointment),
-      // Chỉ lịch đang chờ mới được xác nhận / từ chối.
+      // Chỉ lịch đang chờ và CHƯA quá giờ mới được xác nhận / từ chối.
       bottomNavigationBar:
-          appointment != null && appointment.isPending ? _buildActions(appointment) : null,
+          appointment != null && appointment.isPending && !appointment.isOverdueAt(_now)
+          ? _buildActions(appointment)
+          : null,
     );
   }
 
@@ -110,6 +115,36 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
         ),
         const SizedBox(height: 12),
         _StatusNote(status: a.status),
+        // Lịch chờ đã qua giờ hẹn mà chưa xử lý -> hết hiệu lực, không còn nút xử lý.
+        // (Chỉ tới được đây từ thông báo cũ; danh sách của nhân viên đã ẩn lịch này.)
+        if (a.isOverdueAt(_now)) ...[
+          const SizedBox(height: 8),
+          Container(
+            key: const ValueKey('expired_note'),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.errorLight,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.error_outline_rounded, size: 20, color: AppColors.error),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    AppStrings.noteExpired,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         _Card(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

@@ -46,20 +46,29 @@ class Appointment {
 
   bool get isPending => status == AppointmentStatus.pending;
 
+  /// Lịch CHỜ XÁC NHẬN nhưng đã tới / qua giờ bắt đầu mà chưa được nhân viên xử lý.
+  /// Quy tắc người dùng chốt ngày 18/11/2026: lịch như vậy HẾT HIỆU LỰC phía nhân viên –
+  /// không hiện ở Tổng quan / Lịch đặt, không tính vào bất kỳ số liệu nào, không xác nhận /
+  /// từ chối được nữa (khách đến muộn thì hẹn trực tiếp với nhân viên). Dữ liệu trên Firestore
+  /// không bị sửa; phía khách hàng lịch vẫn nằm ở nhóm "Đã qua" (chờ quá giờ).
+  bool isOverdueAt(DateTime now) => isPending && !startAt.isAfter(now);
+
+  /// Nhân viên còn thấy / xử lý lịch này không (mọi lịch trừ lịch chờ đã quá giờ).
+  bool isStaffVisibleAt(DateTime now) => !isOverdueAt(now);
+
   /// Lịch còn hiệu lực: chưa bị hủy / từ chối.
-  bool get isActive =>
-      status == AppointmentStatus.pending || status == AppointmentStatus.confirmed;
+  bool get isActive => status == AppointmentStatus.pending || status == AppointmentStatus.confirmed;
 
   Appointment copyWith({AppointmentStatus? status}) => Appointment(
-        id: id,
-        customerId: customerId,
-        customerName: customerName,
-        serviceName: serviceName,
-        startAt: startAt,
-        endAt: endAt,
-        status: status ?? this.status,
-        isDemo: isDemo,
-        doctorId: doctorId,
-        doctorName: doctorName,
-      );
+    id: id,
+    customerId: customerId,
+    customerName: customerName,
+    serviceName: serviceName,
+    startAt: startAt,
+    endAt: endAt,
+    status: status ?? this.status,
+    isDemo: isDemo,
+    doctorId: doctorId,
+    doctorName: doctorName,
+  );
 }

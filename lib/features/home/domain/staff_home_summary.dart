@@ -12,7 +12,6 @@ class StaffHomeSummary {
     required this.todayCancelledOrRejected,
     required this.todayRemaining,
     required this.pendingAllDays,
-    required this.pendingOverdue,
     required this.nextPending,
     required this.upcoming,
   });
@@ -35,9 +34,6 @@ class StaffHomeSummary {
   /// Lịch Pending ở MỌI ngày (thẻ "Có X lịch đặt mới cần xử lý").
   final int pendingAllDays;
 
-  /// Trong [pendingAllDays]: số lịch đã qua giờ bắt đầu mà vẫn chưa được xử lý.
-  final int pendingOverdue;
-
   /// Lịch Pending CHƯA tới giờ gần nhất (cần xử lý sớm nhất), `null` nếu không có.
   final Appointment? nextPending;
 
@@ -49,7 +45,10 @@ class StaffHomeSummary {
   /// Chỉ số "Chờ xác nhận" hôm nay luôn nằm trong số "cần xử lý" (mọi ngày).
   int get pendingOtherDays => pendingAllDays - todayPending;
 
-  factory StaffHomeSummary.from(List<Appointment> all, DateTime now) {
+  /// Lịch chờ đã quá giờ hết hiệu lực phía nhân viên (`Appointment.isOverdueAt`) nên bị bỏ
+  /// TRƯỚC khi đếm – cùng tập lịch mà màn Lịch đặt hiển thị, nên mọi con số luôn khớp bộ lọc.
+  factory StaffHomeSummary.from(List<Appointment> source, DateTime now) {
+    final all = source.where((a) => a.isStaffVisibleAt(now)).toList();
     final today = all.where((a) => AppDateUtils.isSameDay(a.startAt, now)).toList();
     int countToday(bool Function(Appointment) test) => today.where(test).length;
 
@@ -67,7 +66,6 @@ class StaffHomeSummary {
       todayCancelledOrRejected: countToday((a) => !a.isActive),
       todayRemaining: countToday((a) => a.isActive && a.startAt.isAfter(now)),
       pendingAllDays: pending.length,
-      pendingOverdue: pending.length - futurePending.length,
       nextPending: futurePending.isEmpty ? null : futurePending.first,
       upcoming: upcoming.take(upcomingLimit).toList(),
     );

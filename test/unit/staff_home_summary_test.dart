@@ -53,9 +53,10 @@ void main() {
   });
 
   group('Thẻ lịch cần xử lý', () {
-    test('đếm Pending ở MỌI ngày, khác với chỉ số Chờ xác nhận hôm nay', () {
+    test('đếm Pending ở MỌI ngày (còn hiệu lực), khác với chỉ số Chờ xác nhận hôm nay', () {
       final s = StaffHomeSummary.from(sample(), now);
-      expect(s.pendingAllDays, 3); // t3 + m1 + y1
+      // Quy tắc 18/11/2026: y1 (chờ từ hôm qua, đã quá giờ) hết hiệu lực -> không tính.
+      expect(s.pendingAllDays, 2); // t3 + m1
       expect(s.todayPending, 1); // chỉ t3
     });
   });
@@ -142,27 +143,31 @@ void main() {
       expect(r.length, StaffHomeSummary.from(sample(), now).pendingAllDays);
     });
 
-    test('Tất cả: đủ danh sách, sắp xếp theo thời gian', () {
+    test('Tất cả: đủ danh sách (trừ lịch chờ đã quá giờ), sắp xếp theo thời gian', () {
       final r = applyBookingFilter(sample().reversed.toList(), BookingFilter.all, now);
-      expect(r.length, 8);
-      expect(r.first.id, 'y1');
+      expect(r.length, 7); // y1 hết hiệu lực
+      expect(r.first.id, 't1');
     });
   });
 
   group('Thẻ cần xử lý – chi tiết (Lượt 18)', () {
-    test('chia số lịch chờ thành hôm nay / ngày khác; quá giờ; lịch chờ gần nhất', () {
+    test('chia số lịch chờ thành hôm nay / ngày khác; lịch chờ gần nhất', () {
       final s = StaffHomeSummary.from(sample(), now);
-      expect(s.pendingAllDays, 3); // t3, m1, y1
+      expect(s.pendingAllDays, 2); // t3, m1 (y1 đã quá giờ -> hết hiệu lực)
       expect(s.todayPending, 1);
-      expect(s.pendingOtherDays, 2);
+      expect(s.pendingOtherDays, 1);
       expect(s.todayPending + s.pendingOtherDays, s.pendingAllDays);
-      expect(s.pendingOverdue, 1); // y1 đã qua giờ mà chưa xử lý
       expect(s.nextPending?.id, 't3');
     });
 
-    test('lịch chờ vừa tới giờ thì chuyển sang "quá giờ", lịch chờ gần nhất là lịch kế tiếp', () {
+    test('lịch chờ vừa tới giờ thì hết hiệu lực: rời mọi số liệu, lịch chờ gần nhất là lịch kế tiếp',
+        () {
+      final before = StaffHomeSummary.from(sample(), now);
       final s = StaffHomeSummary.from(sample(), today(11));
-      expect(s.pendingOverdue, 2); // y1 + t3
+      expect(s.pendingAllDays, 1); // chỉ còn m1
+      expect(s.todayPending, 0);
+      expect(s.todayTotal, before.todayTotal - 1); // t3 không còn tính vào hôm nay
+      expect(s.todayTotal, s.todayPending + s.todayConfirmed + s.todayCancelledOrRejected);
       expect(s.nextPending?.id, 'm1');
     });
 
@@ -172,8 +177,7 @@ void main() {
           .toList();
       final s = StaffHomeSummary.from(list, now);
       expect(s.nextPending, isNull);
-      expect(s.pendingAllDays, 1);
-      expect(s.pendingOverdue, 1);
+      expect(s.pendingAllDays, 0);
     });
 
     test('còn lại hôm nay = lịch hôm nay còn hiệu lực chưa tới giờ', () {

@@ -11,7 +11,6 @@ import '../../../appointments/domain/booking_filter.dart';
 import '../../../appointments/domain/entities/appointment.dart';
 import '../../../appointments/domain/entities/appointment_status.dart';
 import '../../../appointments/presentation/controllers/appointments_controller.dart';
-import '../../../appointments/presentation/screens/appointment_detail_screen.dart';
 import '../../../appointments/presentation/widgets/appointment_actions.dart';
 import '../../../appointments/presentation/widgets/appointment_tile.dart';
 import '../../../appointments/presentation/widgets/status_chip.dart';
@@ -42,23 +41,62 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
   late final StaffNavController _nav;
   bool _searchOpen = false;
 
+  /// Cuộn của danh sách thường và của danh sách "Tất cả" mở ở mốc hôm nay (vị trí 0 = mốc).
+  final _listScroll = ScrollController();
+  final _allScroll = ScrollController();
+
+  /// Đã cuộn xa khỏi mốc hôm nay ở "Tất cả" -> hiện nút "Hôm nay" để quay lại.
+  bool _farFromToday = false;
+  late int _lastOpenRequest;
+
   @override
   void initState() {
     super.initState();
     _nav = context.read<StaffNavController>()..addListener(_onNavChanged);
+    _lastOpenRequest = _nav.openRequest;
   }
 
-  /// Từ khoá bị xoá từ bên ngoài (VD Tổng quan mở màn này với bộ lọc mới) -> đóng ô tìm kiếm.
   void _onNavChanged() {
+    // Từ khoá bị xoá từ bên ngoài (VD Tổng quan mở màn này với bộ lọc mới) -> đóng ô tìm kiếm.
     if (_nav.query.isEmpty && _search.text.isNotEmpty) {
       _search.clear();
       setState(() => _searchOpen = false);
     }
+    // Tổng quan vừa mở màn này -> về vị trí mở đầu, không giữ chỗ cuộn của lần trước.
+    if (_nav.openRequest != _lastOpenRequest) {
+      _lastOpenRequest = _nav.openRequest;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToStart(animate: false));
+    }
+  }
+
+  void _scrollToStart({bool animate = true}) {
+    for (final c in [_listScroll, _allScroll]) {
+      if (!c.hasClients) continue;
+      animate
+          ? c.animateTo(0, duration: const Duration(milliseconds: 350), curve: Curves.easeOut)
+          : c.jumpTo(0);
+    }
+    if (_farFromToday) setState(() => _farFromToday = false);
+  }
+
+  bool _onAllScroll(ScrollNotification n) {
+    if (n.depth != 0) return false;
+    final far = n.metrics.pixels.abs() > 600;
+    if (far != _farFromToday) setState(() => _farFromToday = far);
+    return false;
+  }
+
+  /// Kéo xuống để làm mới: dữ liệu vốn tự cập nhật; thao tác này tính lại theo giờ hiện tại.
+  Future<void> _refresh() async {
+    context.read<AppointmentsController>().refreshClock();
+    await Future<void>.delayed(const Duration(milliseconds: 400));
   }
 
   @override
   void dispose() {
     _nav.removeListener(_onNavChanged);
+    _listScroll.dispose();
+    _allScroll.dispose();
     _search.dispose();
     _searchFocus.dispose();
     super.dispose();
@@ -76,7 +114,14 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
   }
 
   Future<void> _openStatusFilter() async {
-    final picked = await StatusFilterSheet.show(context, _nav.statuses);
+    final appointments = context.read<AppointmentsController>();
+    // Số lịch của từng trạng thái trong bộ lọc chính + từ khoá đang dùng. Đang ở "Chờ xác nhận"
+    // thì đếm theo "Tất cả", vì chọn trạng thái ở đó sẽ tự chuyển sang "Tất cả" (setStatuses).
+    final base = _nav.filter == BookingFilter.pending ? BookingFilter.all : _nav.filter;
+    final counts = countByStatus(
+      applyBookingFilter(appointments.items, base, appointments.now, query: _nav.query),
+    );
+    final picked = await StatusFilterSheet.show(context, _nav.statuses, counts: counts);
     if (picked != null) _nav.setStatuses(picked);
   }
 
@@ -91,8 +136,19 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
     final appointments = context.watch<AppointmentsController>();
     final ready = appointments.status == LoadStatus.ready;
 
+    final showTodayButton = _farFromToday && _isAnchoredAll(appointments, nav);
     return Scaffold(
       backgroundColor: AppColors.surface,
+      floatingActionButton: showTodayButton
+          ? FloatingActionButton.extended(
+              key: const ValueKey('back_to_today'),
+              onPressed: _scrollToStart,
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.today_rounded),
+              label: const Text(AppStrings.backToToday),
+            )
+          : null,
       // Nền sáng -> icon thanh trạng thái màu tối (Tổng quan dùng màu sáng trên nền xanh).
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
@@ -293,23 +349,22 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
         if (items.isEmpty) return _buildEmpty(nav);
 
         final groups = groupBookingsByDay(items);
-        // "Tất cả" chứa cả lịch cũ (sắp từ cũ tới mới). Để không phải cuộn qua hàng trăm lịch
-        // đã qua, danh sách MỞ SẴN ở hôm nay (hoặc ngày gần nhất phía sau); lịch trước hôm nay
-        // vẫn còn nguyên, chỉ nằm phía trên – kéo xuống là thấy. Khi đang tìm kiếm thì hiện
-        // danh sách thường để không che mất kết quả.
-        final split = nav.filter == BookingFilter.all && nav.query.trim().isEmpty
-            ? groups.indexWhere((g) => !g.day.isBefore(AppDateUtils.dayOnly(now)))
-            : -1;
+        final split = _todaySplit(groups, nav, now);
+        final dayCounts = {for (final g in groups) g.day: g.items.length};
 
         List<Object> rowsOf(Iterable<BookingDayGroup> gs) => [
           for (final g in gs) ...[g.day, ...g.items],
         ];
         Widget buildRow(Object row) {
-          if (row is DateTime) return _DayHeader(day: row, now: now);
+          if (row is DateTime) return _DayHeader(day: row, now: now, count: dayCounts[row]!);
           final appointment = row as Appointment;
           return Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _BookingCard(key: ValueKey('card_${appointment.id}'), appointment: appointment),
+            child: _BookingCard(
+              key: ValueKey('card_${appointment.id}'),
+              appointment: appointment,
+              now: now,
+            ),
           );
         }
 
@@ -330,11 +385,17 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
             children: [
               countRow,
               Expanded(
-                child: ListView.builder(
-                  key: const ValueKey('bookings_list'),
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  itemCount: rows.length,
-                  itemBuilder: (context, i) => buildRow(rows[i]),
+                child: RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _refresh,
+                  child: ListView.builder(
+                    key: const ValueKey('bookings_list'),
+                    controller: _listScroll,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
+                    itemCount: rows.length,
+                    itemBuilder: (context, i) => buildRow(rows[i]),
+                  ),
                 ),
               ),
             ],
@@ -351,32 +412,57 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
           children: [
             countRow,
             Expanded(
-              child: CustomScrollView(
-                key: const ValueKey('bookings_list'),
-                center: const ValueKey('bookings_from_today'),
-                slivers: [
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverList.builder(
-                      itemCount: pastRows.length,
-                      itemBuilder: (context, i) => buildRow(pastRows[i]),
+              child: NotificationListener<ScrollNotification>(
+                onNotification: _onAllScroll,
+                child: CustomScrollView(
+                  key: const ValueKey('bookings_list'),
+                  controller: _allScroll,
+                  center: const ValueKey('bookings_from_today'),
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverList.builder(
+                        itemCount: pastRows.length,
+                        itemBuilder: (context, i) => buildRow(pastRows[i]),
+                      ),
                     ),
-                  ),
-                  SliverPadding(
-                    key: const ValueKey('bookings_from_today'),
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                    sliver: SliverList.builder(
-                      itemCount: futureRows.length + 1,
-                      itemBuilder: (context, i) =>
-                          i == 0 ? _EarlierHint(count: pastCount) : buildRow(futureRows[i - 1]),
+                    SliverPadding(
+                      key: const ValueKey('bookings_from_today'),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 88),
+                      sliver: SliverList.builder(
+                        itemCount: futureRows.length + 1,
+                        itemBuilder: (context, i) =>
+                            i == 0 ? _EarlierHint(count: pastCount) : buildRow(futureRows[i - 1]),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
         );
     }
+  }
+
+  /// "Tất cả" chứa cả lịch cũ (sắp từ cũ tới mới). Để không phải cuộn qua hàng trăm lịch đã qua,
+  /// danh sách MỞ SẴN ở hôm nay (hoặc ngày gần nhất phía sau); lịch trước hôm nay vẫn còn nguyên,
+  /// nằm phía trên – kéo xuống là thấy. Đang tìm kiếm thì hiện danh sách thường để không che kết quả.
+  /// Trả về chỉ số nhóm ngày đầu tiên từ hôm nay; <= 0 nghĩa là dùng danh sách thường.
+  static int _todaySplit(List<BookingDayGroup> groups, StaffNavController nav, DateTime now) {
+    if (nav.filter != BookingFilter.all || nav.query.trim().isNotEmpty) return -1;
+    return groups.indexWhere((g) => !g.day.isBefore(AppDateUtils.dayOnly(now)));
+  }
+
+  bool _isAnchoredAll(AppointmentsController appointments, StaffNavController nav) {
+    if (appointments.status != LoadStatus.ready) return false;
+    final items = applyBookingFilter(
+      appointments.items,
+      nav.filter,
+      appointments.now,
+      statuses: nav.statuses,
+      query: nav.query,
+    );
+    return _todaySplit(groupBookingsByDay(items), nav, appointments.now) > 0;
   }
 
   Widget _buildEmpty(StaffNavController nav) {
@@ -508,10 +594,13 @@ class _EarlierHint extends StatelessWidget {
 }
 
 class _DayHeader extends StatelessWidget {
-  const _DayHeader({required this.day, required this.now});
+  const _DayHeader({required this.day, required this.now, required this.count});
 
   final DateTime day;
   final DateTime now;
+
+  /// Số lịch của ngày này trong danh sách đang hiện.
+  final int count;
 
   @override
   Widget build(BuildContext context) {
@@ -526,13 +615,20 @@ class _DayHeader extends StatelessWidget {
             color: isToday ? AppColors.primary : AppColors.textSecondary,
           ),
           const SizedBox(width: 6),
-          Text(
-            AppDateUtils.dayLabel(day, now),
-            style: TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: isToday ? AppColors.primary : AppColors.textSecondary,
+          Expanded(
+            child: Text(
+              AppDateUtils.dayLabel(day, now),
+              style: TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: isToday ? AppColors.primary : AppColors.textSecondary,
+              ),
             ),
+          ),
+          Text(
+            AppStrings.dayCount(count),
+            key: ValueKey('day_count_${AppDateUtils.isoDate(day)}'),
+            style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -540,11 +636,14 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-/// Thẻ lịch hẹn ở màn Lịch đặt: thông tin + hàng nút phía dưới.
+/// Thẻ lịch hẹn ở màn Lịch đặt: thông tin (có tên bác sĩ; giờ không lặp lại ngày vì đã có
+/// tiêu đề ngày) + nút Xác nhận / Từ chối nhanh với lịch đang chờ. Lịch đã xử lý không có nút
+/// (bấm cả thẻ để mở Chi tiết) nên thẻ gọn hơn, xem được nhiều lịch hơn trên một màn hình.
 class _BookingCard extends StatefulWidget {
-  const _BookingCard({super.key, required this.appointment});
+  const _BookingCard({super.key, required this.appointment, required this.now});
 
   final Appointment appointment;
+  final DateTime now;
 
   @override
   State<_BookingCard> createState() => _BookingCardState();
@@ -575,10 +674,14 @@ class _BookingCardState extends State<_BookingCard> {
         child: AppointmentTile(
           appointment: a,
           showCode: true,
-          footer: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: a.isPending
-                ? [
+          now: widget.now,
+          showDoctor: true,
+          showDate: false,
+          footer: !a.isPending
+              ? null
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
                     _PillButton(
                       key: ValueKey('quick_confirm_${a.id}'),
                       label: AppStrings.confirmAppointment,
@@ -596,17 +699,8 @@ class _BookingCardState extends State<_BookingCard> {
                       foreground: AppColors.error,
                       onTap: _busy ? null : () => _handle(confirm: false),
                     ),
-                  ]
-                : [
-                    _PillButton(
-                      label: AppStrings.viewDetail,
-                      trailingIcon: Icons.chevron_right_rounded,
-                      background: AppColors.surface,
-                      foreground: AppColors.textPrimary,
-                      onTap: () => AppointmentDetailScreen.open(context, a.id),
-                    ),
                   ],
-          ),
+                ),
         ),
       ),
     );
@@ -620,13 +714,11 @@ class _PillButton extends StatelessWidget {
     required this.background,
     required this.foreground,
     required this.onTap,
-    this.icon,
-    this.trailingIcon,
+    required this.icon,
   });
 
   final String label;
-  final IconData? icon;
-  final IconData? trailingIcon;
+  final IconData icon;
   final Color background;
   final Color foreground;
   final VoidCallback? onTap;
@@ -642,24 +734,16 @@ class _PillButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              icon == null ? 14 : 10,
-              8,
-              trailingIcon == null ? 14 : 6,
-              8,
-            ),
+            padding: const EdgeInsets.fromLTRB(10, 8, 14, 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 17, color: foreground),
-                  const SizedBox(width: 5),
-                ],
+                Icon(icon, size: 17, color: foreground),
+                const SizedBox(width: 5),
                 Text(
                   label,
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: foreground),
                 ),
-                if (trailingIcon != null) Icon(trailingIcon, size: 18, color: foreground),
               ],
             ),
           ),

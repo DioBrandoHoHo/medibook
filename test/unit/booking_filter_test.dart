@@ -187,4 +187,75 @@ void main() {
     // id tự sinh của Firestore (20 ký tự) -> lấy 6 ký tự cuối, viết hoa.
     expect(appt('k3F9qZ1aB2cD3eF4gH5i', _now).shortCode, '#F4GH5I');
   });
+
+  group('Lượt 19: bác sĩ, đếm theo trạng thái, quá giờ', () {
+    test('tìm theo tên bác sĩ, không dấu, không phân biệt hoa thường', () {
+      final list = [
+        appt('a', DateTime(2026, 11, 14, 11), doctorId: 'Hoàng Thu Giang'),
+        appt('b', DateTime(2026, 11, 14, 12)), // chưa gắn bác sĩ -> không lỗi
+      ];
+      expect(_ids(applyBookingFilter(list, BookingFilter.all, _now, query: 'hoang thu')), ['a']);
+      expect(_ids(applyBookingFilter(list, BookingFilter.all, _now, query: 'BS. HOÀNG')), ['a']);
+    });
+
+    test('countByStatus đếm đủ 4 trạng thái, tổng bằng số lịch', () {
+      final today = applyBookingFilter(_all(), BookingFilter.today, _now);
+      final c = countByStatus(today);
+      expect(c[AppointmentStatus.pending], 1);
+      expect(c[AppointmentStatus.confirmed], 1);
+      expect(c[AppointmentStatus.cancelled], 1);
+      expect(c[AppointmentStatus.rejected], 1);
+      expect(c.values.fold<int>(0, (a, b) => a + b), today.length);
+      expect(countByStatus(const []).values.every((v) => v == 0), isTrue);
+    });
+
+    test('isOverdueAt: chỉ lịch Chờ xác nhận đã tới / qua giờ bắt đầu', () {
+      final past = DateTime(2026, 11, 14, 9);
+      expect(appt('p', past).isOverdueAt(_now), isTrue);
+      expect(appt('p', _now).isOverdueAt(_now), isTrue); // đúng giờ bắt đầu
+      expect(appt('p', DateTime(2026, 11, 14, 11)).isOverdueAt(_now), isFalse);
+      for (final s in [
+        AppointmentStatus.confirmed,
+        AppointmentStatus.cancelled,
+        AppointmentStatus.rejected,
+      ]) {
+        expect(appt('x', past, status: s).isOverdueAt(_now), isFalse);
+      }
+    });
+
+    test('lịch chờ đã quá giờ bị bỏ khỏi MỌI bộ lọc và mọi số liệu Trang chủ (quy tắc 18/11)', () {
+      final list = [
+        ..._all(),
+        appt('late', DateTime(2026, 11, 12, 8)),
+        appt('late_today', DateTime(2026, 11, 14, 8)),
+      ];
+      for (final f in BookingFilter.values) {
+        final ids = _ids(applyBookingFilter(list, f, _now));
+        expect(ids, isNot(contains('late')), reason: '$f');
+        expect(ids, isNot(contains('late_today')), reason: '$f');
+      }
+      // Tìm đích danh hay lọc trạng thái Chờ xác nhận cũng không ra.
+      expect(applyBookingFilter(list, BookingFilter.all, _now, query: 'late'), isEmpty);
+      expect(
+        _ids(applyBookingFilter(list, BookingFilter.all, _now,
+            statuses: {AppointmentStatus.pending})),
+        ['today_pending', 'tomorrow_pending', 'next_month_pending'],
+      );
+      final s = StaffHomeSummary.from(list, _now);
+      expect(s.pendingAllDays, applyBookingFilter(list, BookingFilter.pending, _now).length);
+      expect(s.todayTotal, applyBookingFilter(list, BookingFilter.today, _now).length);
+      // Lịch đã xác nhận / hủy / từ chối đã qua giờ vẫn hiện bình thường.
+      expect(_ids(applyBookingFilter(list, BookingFilter.all, _now)), contains('yesterday_rejected'));
+    });
+
+    test('StaffNavController.openBookings tăng openRequest; đổi bộ lọc tại chỗ thì không', () {
+      final nav = StaffNavController();
+      final before = nav.openRequest;
+      nav.openBookings(BookingFilter.pending);
+      expect(nav.openRequest, before + 1);
+      nav.setFilter(BookingFilter.all);
+      nav.setQuery('abc');
+      expect(nav.openRequest, before + 1);
+    });
+  });
 }

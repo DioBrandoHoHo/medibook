@@ -37,7 +37,6 @@ abstract final class AppStrings {
       count == 0 ? 'Không còn lịch nào chưa diễn ra' : 'Còn $count lịch chưa diễn ra';
   static String pendingToday(int count) => 'Hôm nay $count';
   static String pendingOtherDays(int count) => 'Ngày khác $count';
-  static String pendingOverdue(int count) => '$count lịch đã quá giờ';
   static String nextPendingAt(String day, String time) => 'Gần nhất: $time, $day';
   static const noPendingHint = 'Mọi lịch đặt đều đã được xử lý';
   static String earlierBookings(int count) => 'Kéo xuống để xem $count lịch trước hôm nay';
@@ -66,7 +65,7 @@ abstract final class AppStrings {
   static const bookingsEmptyFiltered = 'Không tìm thấy lịch đặt phù hợp';
   static const clearFilters = 'Xoá tìm kiếm và bộ lọc';
   static const search = 'Tìm kiếm';
-  static const searchHint = 'Tìm theo tên khách, dịch vụ, mã lịch';
+  static const searchHint = 'Tìm tên khách, bác sĩ, dịch vụ, mã lịch';
   static const closeSearch = 'Đóng tìm kiếm';
   static const clearText = 'Xoá';
   static const statusFilter = 'Lọc theo trạng thái';
@@ -74,6 +73,11 @@ abstract final class AppStrings {
   static const apply = 'Áp dụng';
   static const reset = 'Đặt lại';
   static String bookingCount(int count) => '$count lịch đặt';
+  static String dayCount(int count) => '$count lịch';
+  static const backToToday = 'Hôm nay';
+  static const noteExpired =
+      'Lịch đã qua giờ hẹn mà chưa được xử lý nên không còn hiệu lực. Nếu khách đến muộn, hãy hẹn lại trực tiếp.';
+  static const errExpired = 'Lịch hẹn đã quá giờ nên không thể xác nhận hoặc từ chối.';
   static const viewDetail = 'Xem chi tiết';
 
   // Xác nhận / từ chối lịch
@@ -181,6 +185,33 @@ abstract final class AppStrings {
   // Tab Tài khoản của Staff (thong_tin.txt)
   static const accountTitle = 'Tài khoản';
   static const notUpdated = 'Chưa cập nhật';
+
+  static const discardChangesTitle = 'Bỏ thay đổi?';
+  static const discardChangesMessage = 'Những thông tin bạn vừa sửa chưa được lưu sẽ bị mất.';
+  static const discardChanges = 'Bỏ thay đổi';
+  static const keepEditing = 'Tiếp tục sửa';
+
+  // Ảnh đại diện (thong_tin.txt – Phần bổ sung A)
+  static const avatarTitle = 'Ảnh đại diện';
+  static const avatarChange = 'Đổi ảnh đại diện';
+  static const avatarPickGallery = 'Chọn ảnh từ thư viện';
+  static const avatarPickHint = 'Ảnh JPG, PNG, WebP… tối đa 20 MB';
+  static const avatarRemove = 'Xoá ảnh đại diện';
+  static const avatarRemoveShort = 'Xoá ảnh';
+  static const avatarRemoveTitle = 'Xoá ảnh đại diện?';
+  static const avatarRemoveMessage =
+      'Ảnh hiện tại sẽ bị xoá, ảnh đại diện trở về chữ cái đầu của tên.';
+  static const avatarPreviewTitle = 'Xem trước ảnh đại diện';
+  static const avatarPreviewHint = 'Ảnh được cắt vuông ở giữa và hiển thị trong khung tròn.';
+  static const avatarSave = 'Lưu ảnh';
+  static const avatarSaved = 'Đã cập nhật ảnh đại diện';
+  static const avatarRemoved = 'Đã xoá ảnh đại diện';
+  static const avatarTooLarge = 'Ảnh quá lớn. Vui lòng chọn ảnh dưới 20 MB.';
+  static const avatarUnsupported =
+      'Không đọc được ảnh này. Vui lòng chọn ảnh định dạng JPG, PNG hoặc WebP.';
+  static const avatarPermissionDenied =
+      'MediBook chưa được cấp quyền truy cập ảnh. Hãy cấp quyền trong Cài đặt của điện thoại rồi thử lại.';
+  static const avatarPickFailed = 'Không mở được thư viện ảnh. Vui lòng thử lại.';
   static const email = 'Email';
   static const birthDate = 'Ngày sinh';
   static const birthDateHint = 'dd/mm/yyyy';

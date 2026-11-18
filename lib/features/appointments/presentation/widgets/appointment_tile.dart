@@ -19,6 +19,7 @@ class AppointmentTile extends StatelessWidget {
     this.footer,
     this.now,
     this.showDoctor = false,
+    this.showDate = true,
   });
 
   final Appointment appointment;
@@ -33,6 +34,9 @@ class AppointmentTile extends StatelessWidget {
   /// Hiện tên bác sĩ khám ở dòng dưới dịch vụ (nếu lịch đã gắn bác sĩ).
   final bool showDoctor;
 
+  /// `false` -> chỉ hiện giờ, không hiện ngày (màn Lịch đặt đã có tiêu đề ngày phía trên).
+  final bool showDate;
+
   /// Vùng dưới cùng của thẻ (VD nút Xác nhận / Từ chối ở màn Lịch đặt).
   /// Trang chủ không truyền -> không có nút xử lý trên thẻ (trang_chu.txt 2.4).
   final Widget? footer;
@@ -46,6 +50,10 @@ class AppointmentTile extends StatelessWidget {
         ? AppDateUtils.date(a.startAt)
         : AppDateUtils.shortDayLabel(a.startAt, now);
     final startsIn = now == null ? null : AppDateUtils.startsIn(a.startAt, now);
+    // Nhãn xanh sau giờ khám: "còn 25 phút" (lịch hôm nay chưa bắt đầu).
+    final trailing = startsIn;
+    final time = AppDateUtils.timeRange(a.startAt, a.endAt);
+    final timeText = trailing != null ? '$time  •  ' : (showDate ? '$time  •  $dateText' : time);
     return InkWell(
       key: ValueKey('appointment_${a.id}'),
       onTap: () => AppointmentDetailScreen.open(context, a.id),
@@ -139,20 +147,20 @@ class AppointmentTile extends StatelessWidget {
                             child: Text(
                               // Lịch hôm nay chưa bắt đầu: "còn 25 phút" thay cho chữ "Hôm nay"
                               // (vừa đủ nghĩa, không bị cắt chữ trên màn hình hẹp).
-                              startsIn == null
-                                  ? '${AppDateUtils.timeRange(a.startAt, a.endAt)}  •  $dateText'
-                                  : '${AppDateUtils.timeRange(a.startAt, a.endAt)}  •  ',
+                              timeText,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                             ),
                           ),
-                          if (startsIn != null)
+                          if (trailing != null)
                             Text(
-                              startsIn,
-                              key: ValueKey('starts_in_${a.id}'),
-                              style: const TextStyle(
-                                color: AppColors.primary,
+                              trailing,
+                              key: ValueKey(
+                                startsIn != null ? 'starts_in_${a.id}' : 'overdue_${a.id}',
+                              ),
+                              style: TextStyle(
+                                color: startsIn != null ? AppColors.primary : AppColors.error,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
                               ),
