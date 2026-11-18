@@ -2,7 +2,7 @@
 
 Ứng dụng di động (Flutter) hỗ trợ đặt lịch khám bệnh. Customer xem bác sĩ, chọn ngày/khung giờ, gửi yêu cầu và theo dõi trạng thái; Staff tiếp nhận, xác nhận/từ chối lịch và theo dõi lịch làm việc.
 
-> Trạng thái: đã có Welcome, Đăng ký/Đăng nhập, tự đăng nhập lại, phân quyền Customer/Staff, khung điều hướng 4 tab, **Trang tổng quan Staff** (tổng quan hôm nay, lịch cần xử lý, lịch sắp diễn ra, popup thông báo), **Trang Lịch đặt** (3 bộ lọc, tìm kiếm, lọc theo trạng thái, xác nhận/từ chối nhanh) Chi tiết lịch hẹn và **tab Tài khoản của Staff** (xem / sửa thông tin cá nhân, đổi mật khẩu, đăng xuất). Có thêm **tab Lịch làm việc** (bác sĩ, buổi Sáng / Chiều, khung 30 phút trống hay đã đặt). **Khu vực Khách hàng:** Trang chủ (lịch hẹn sắp tới, bác sĩ còn trống hôm nay), **Đặt lịch** (lọc theo thời gian mong muốn / chuyên khoa / tên, xem thông tin + lịch trống của bác sĩ, đặt ca 30 phút, chống đặt trùng) và tab **Cá nhân**. Tab **Lịch hẹn** của khách hàng (3 nhóm Sắp tới / Đã qua / Đã hủy, chi tiết, **hủy lịch** – lịch đã xác nhận chỉ hủy được trước giờ khám 2 giờ, hủy xong nhân viên nhận thông báo). **Quên mật khẩu** qua email khôi phục đã xác minh (vẫn đăng nhập bằng SĐT). Chưa có: quản lý bác sĩ.
+> Trạng thái: đã có Welcome, Đăng ký/Đăng nhập, tự đăng nhập lại, phân quyền Customer/Staff, khung điều hướng 4 tab, **Trang tổng quan Staff** (tổng quan hôm nay, lịch cần xử lý, lịch sắp diễn ra, popup thông báo), **Trang Lịch đặt** (3 bộ lọc, tìm kiếm, lọc theo trạng thái, xác nhận/từ chối nhanh) Chi tiết lịch hẹn và **tab Tài khoản của Staff** (xem / sửa thông tin cá nhân, đổi mật khẩu, đăng xuất). Có thêm **tab Lịch làm việc** (bác sĩ, buổi Sáng / Chiều, khung 30 phút trống hay đã đặt). **Khu vực Khách hàng:** Trang chủ (lịch hẹn sắp tới, bác sĩ còn trống hôm nay), **Đặt lịch** (lọc theo thời gian mong muốn / chuyên khoa / tên, xem thông tin + lịch trống của bác sĩ, đặt ca 30 phút, chống đặt trùng) và tab **Cá nhân**. Tab **Lịch hẹn** của khách hàng (3 nhóm Sắp tới / Đã qua / Đã hủy, chi tiết, **hủy lịch** – lịch đã xác nhận chỉ hủy được trước giờ khám 2 giờ, hủy xong nhân viên nhận thông báo). **Quên mật khẩu** qua email khôi phục đã xác minh (vẫn đăng nhập bằng SĐT). **Ảnh đại diện** cho cả Nhân viên và Khách hàng (chọn từ thư viện ảnh, tự cắt vuông, lưu trên Firestore). Lịch chờ xác nhận đã quá giờ mà nhân viên chưa xử lý thì **hết hiệu lực** phía nhân viên (không hiện, không tính vào số liệu). Chưa có: quản lý bác sĩ.
 
 ## Công nghệ
 | Hạng mục | Lựa chọn |
@@ -11,6 +11,7 @@
 | Backend | Firebase Auth (Email/Password) + Cloud Firestore |
 | State management | `provider` |
 | Routing | `go_router` (redirect theo phiên & vai trò) |
+| Ảnh đại diện | `image_picker` (thư viện ảnh của Android – Photo Picker, không cần xin quyền) + `image` (cắt / thu nhỏ / nén, thuần Dart) |
 
 ## Cài đặt và chạy
 ```bash
@@ -18,6 +19,9 @@ flutter pub get
 flutter run
 ```
 Nếu chưa có `google-services.json`, app vẫn build được nhưng sẽ hiện màn "Chưa cấu hình Firebase".
+
+**Demo từ màn Welcome:** app tự đăng nhập lại nếu còn phiên cũ, nên muốn demo trọn luồng từ Welcome hãy xoá dữ liệu app trước khi mở
+(Cài đặt → Ứng dụng → MediBook → Bộ nhớ → Xoá dữ liệu, hoặc `adb shell pm clear com.medibook.medibook`) rồi `flutter run`.
 
 ## Cấu hình Firebase (làm 1 lần)
 1. Vào https://console.firebase.google.com → **Add project** → đặt tên (VD `medibook`) → có thể tắt Google Analytics.
@@ -38,7 +42,7 @@ Nếu chưa có `google-services.json`, app vẫn build được nhưng sẽ hi�
      `fullName` (string), `phone` (string, VD `0987654321`), `role` (string) = `staff`, `profileCompleted` (boolean) = `false`, `profilePromptDismissed` (boolean) = `false`.
 8. Chạy lại `flutter run`.
 
-> **Mỗi khi file `firestore.rules` thay đổi** (VD sau khi thêm Trang chủ Staff) phải làm lại bước 6: dán nội dung mới → **Publish**. Nếu chưa cập nhật, Trang chủ Staff sẽ báo "Bạn không có quyền thực hiện thao tác này." kèm nút *Thử lại*.
+> **Mỗi khi file `firestore.rules` thay đổi** (VD sau khi thêm Trang chủ Staff, hoặc thêm trường ảnh đại diện `avatar` ngày 18/11/2026) phải làm lại bước 6: dán nội dung mới → **Publish**. Nếu chưa cập nhật, Trang chủ Staff sẽ báo "Bạn không có quyền thực hiện thao tác này." kèm nút *Thử lại*.
 
 ## Tài khoản thử
 | Vai trò | Số điện thoại | Mật khẩu |
@@ -64,8 +68,16 @@ dart run tool/seed_firestore.dart <SĐT nhân viên> <mật khẩu> <SĐT khách
 ```
 Công cụ chỉ ghi đè các bản ghi có id cố định ở trên, không đụng lịch khách thật đặt.
 
+## Cách thử Đăng ký / Đăng nhập
+1. Welcome → **Bắt đầu** → **Đăng ký**. Họ tên phải 2–50 ký tự và chỉ gồm chữ cái (VD gõ `Nguyen An 99` sẽ bị báo lỗi); khoảng trắng thừa tự bỏ khi lưu.
+2. Mật khẩu: bảng 4 điều kiện đổi màu theo từng ký tự; ô Xác nhận báo "Mật khẩu xác nhận không khớp" cho tới khi trùng.
+3. Đăng ký bằng số đã có tài khoản (VD `0912345678`) → "Số điện thoại đã được đăng ký" + nút **"Đăng nhập bằng số này"** → chuyển sang Đăng nhập, số điền sẵn.
+4. Đăng nhập bằng số chưa có → "Số điện thoại chưa được đăng ký" + nút **"Tạo tài khoản với số này"**. Sai mật khẩu → "Số điện thoại hoặc mật khẩu không chính xác".
+5. Chuyển qua lại Đăng nhập ↔ Đăng ký: số điện thoại đang gõ được giữ, mật khẩu thì không.
+6. Đăng nhập / đăng ký thành công → trình quản lý mật khẩu của điện thoại đề nghị lưu; lần đầu có câu hỏi "Bạn có muốn cập nhật thông tin cá nhân không?" (bấm "Để sau" thì không hỏi lại).
+
 ## Cách thử Trang chủ Staff
-1. Đăng nhập bằng tài khoản Staff → tab **Tổng quan**.
+1. Đăng nhập bằng tài khoản Staff → tab **Tổng quan**: thẻ **"Có X lịch đặt mới cần xử lý"** ở đầu trang (chia "Hôm nay A • Ngày khác B", lịch chờ gần nhất), khu vực **Tổng quan hôm nay** (4 chỉ số, thanh tỉ lệ trạng thái, "Còn N lịch chưa diễn ra"), **Lịch hẹn sắp diễn ra** (tên bác sĩ, "còn X phút"). Kéo xuống để làm mới.
 2. Bấm một lịch "Chờ xác nhận" → **Xác nhận** hoặc **Từ chối** → **Đồng ý** trong hộp thoại hỏi lại → quay lại Tổng quan: các chỉ số, thẻ "Có X lịch đặt mới cần xử lý" và danh sách sắp diễn ra đổi theo.
 3. Thêm lịch tay bằng Firebase Console → Firestore → `appointments`. Lưu ý: lịch thêm tay có `doctorId` sẽ KHÔNG tự giữ khung giờ ở `busy_slots`, nên khách hàng vẫn thấy khung đó trống:
    - **Đặt lịch:** Add document (Auto-ID) với `customerId` (string), `customerName` (string), `serviceName` (string), `startAt` (timestamp), `endAt` (timestamp), `status` (string) = `pending`, `isDemo` (boolean) = `false`.
@@ -79,7 +91,7 @@ Công cụ chỉ ghi đè các bản ghi có id cố định ở trên, không �
 3. Bấm một bác sĩ → xem thông tin, chọn ngày, buổi **Sáng / Chiều**, bấm một khung còn trống → **Đặt lịch** → kiểm tra bảng xác nhận → **Xác nhận đặt lịch**.
 4. Quay lại Trang chủ: lịch vừa đặt hiện ở "Lịch hẹn sắp tới" (Chờ xác nhận); số ca trống của bác sĩ giảm 1.
 5. Đăng xuất → đăng nhập Staff: lịch mới nằm ở **Lịch đặt** (Chờ xác nhận), có thông báo mới, khung ở **Lịch làm việc** thành "Chờ". Xác nhận / từ chối → đăng nhập lại khách hàng: trạng thái đổi theo; bị từ chối thì khung trống trở lại.
-6. Tab **Cá nhân**: thông tin lúc đăng ký, thẻ "Lịch hẹn của tôi" (cùng số với Trang chủ), sửa thông tin, đổi mật khẩu, đăng xuất.
+6. Tab **Cá nhân**: thông tin lúc đăng ký, thẻ "Lịch hẹn của tôi" (cùng số với Trang chủ), **đổi ảnh đại diện** (xem mục tab Tài khoản), sửa thông tin, đổi mật khẩu, đăng xuất.
 7. Tab **Lịch hẹn**: chọn Sắp tới / Đã qua / Đã hủy; bấm thẻ để xem Chi tiết; bấm **Hủy lịch** → đồng ý. Lịch đã xác nhận còn dưới 2 giờ trước giờ khám không có nút Hủy. Sau khi hủy: đăng nhập Staff sẽ thấy thông báo "Lịch hẹn đã hủy" ở chuông và khung giờ ở Lịch làm việc trống lại.
 8. Xem nhanh không cần Firebase, mở thẳng khu vực Khách hàng: `flutter run -t test/demo/main_demo.dart --dart-define=CUSTOMER=true`.
 
@@ -94,11 +106,13 @@ Công cụ chỉ ghi đè các bản ghi có id cố định ở trên, không �
 - Tuỳ chọn: Firebase Console → Authentication → **Templates** (sửa nội dung thư), → **Settings → Password policy** (áp quy tắc mật khẩu của app cho trang đặt lại).
 
 ## Cách thử Trang Lịch đặt
-1. Tab **Lịch đặt** → chọn **Tất cả / Hôm nay / Chờ xác nhận**; số bên cạnh mỗi nút là số lịch của bộ lọc đó.
-2. Lịch đang chờ có nút **Xác nhận / Từ chối** ngay trên thẻ; bấm vào thẻ để mở Chi tiết.
-3. Biểu tượng kính lúp: tìm theo tên khách, dịch vụ hoặc mã lịch (gõ không dấu cũng được). Biểu tượng phễu: lọc theo trạng thái.
-4. Ở Tổng quan, bấm một thẻ chỉ số (VD "Đã xác nhận") → Lịch đặt mở sẵn bộ lọc Hôm nay + trạng thái đó, số lịch bằng đúng con số trên thẻ.
-5. Xem nhanh giao diện không cần Firebase (dữ liệu trong bộ nhớ, tắt app là mất): `flutter run -t test/demo/main_demo.dart`. Bản chính thức luôn là `flutter run`.
+1. Tab **Lịch đặt** → chọn **Tất cả / Hôm nay / Chờ xác nhận**; số bên cạnh mỗi nút là số lịch của bộ lọc đó. Tiêu đề mỗi ngày có số lịch của ngày đó.
+2. **Tất cả** mở sẵn ở hôm nay; kéo xuống (cuộn lên) để xem lịch cũ hơn; cuộn xa thì có nút nổi **"Hôm nay"** để quay lại.
+3. Thẻ lịch có tên bác sĩ, giờ khám và "còn X phút" với lịch hôm nay. Lịch đang chờ có nút **Xác nhận / Từ chối** ngay trên thẻ (có hộp hỏi lại); bấm vào thẻ để mở Chi tiết.
+4. Biểu tượng kính lúp: tìm theo tên khách, tên bác sĩ, dịch vụ hoặc mã lịch (gõ không dấu cũng được). Biểu tượng phễu: lọc theo trạng thái (mỗi lựa chọn có số lịch).
+5. Lịch **chờ xác nhận đã quá giờ** mà chưa được xử lý không còn hiện ở đây và không tính vào số liệu nào (khách đến muộn thì hẹn lại trực tiếp); dữ liệu trên Firestore không bị sửa, phía khách hàng lịch nằm ở nhóm "Đã qua".
+6. Ở Tổng quan, bấm một thẻ chỉ số (VD "Đã xác nhận") → Lịch đặt mở sẵn bộ lọc Hôm nay + trạng thái đó, số lịch bằng đúng con số trên thẻ.
+7. Xem nhanh giao diện không cần Firebase (dữ liệu trong bộ nhớ, tắt app là mất): `flutter run -t test/demo/main_demo.dart`. Bản chính thức luôn là `flutter run`.
 
 ## Cách thử tab Lịch làm việc (Staff)
 1. Tab **Lịch làm việc**: mỗi bác sĩ một thẻ; bấm **Sáng / Chiều** trên thẻ để xem 8 khung 30 phút của buổi đó.
@@ -107,17 +121,18 @@ Công cụ chỉ ghi đè các bản ghi có id cố định ở trên, không �
 3. Bấm khung có lịch để mở Chi tiết. Xác nhận / từ chối ở Lịch đặt rồi quay lại: khung đổi màu theo.
 > Thêm bác sĩ thật: Firebase Console → Firestore → collection `doctors` → Add document với `name`, `specialty`, `room` (string), `isDemo` (boolean) = `false`. Lịch hẹn muốn hiện ở tab này phải có `doctorId` = id của bác sĩ.
 
-## Cách thử tab Tài khoản (Staff)
+## Cách thử tab Tài khoản (Staff) / Cá nhân (Khách hàng)
 1. Tab **Tài khoản**: họ tên và số điện thoại lúc tạo tài khoản hiện sẵn; trường chưa có ghi "Chưa cập nhật".
-2. **Chỉnh sửa** → nhập email, ngày sinh (gõ `15081995` sẽ thành `15/08/1995`), giới tính → **Lưu thông tin**. Quay sang tab Tổng quan: lời chào đổi theo tên mới.
-3. **Đổi mật khẩu**: nhập mật khẩu hiện tại + mật khẩu mới (đủ 4 điều kiện, khác mật khẩu cũ).
-4. **Đăng xuất**: có hỏi lại; đồng ý thì về màn Đăng nhập.
-> Lưu thông tin cần Rules mới: nếu báo "Bạn không có quyền thực hiện thao tác này." hãy Publish lại `firestore.rules`.
+2. **Ảnh đại diện**: bấm vào ảnh ở thẻ tài khoản (có biểu tượng máy ảnh) → **Chọn ảnh từ thư viện** → chọn ảnh → xem trước trong khung tròn → **Lưu ảnh**. Ảnh được cắt vuông ở giữa, thu về 256×256 JPEG (~20–40 KB) và đổi ngay ở thẻ tài khoản, góc phải phần đầu Trang chủ và màn Cập nhật thông tin; đăng xuất / đăng nhập lại vẫn còn. Có thể **Xoá ảnh đại diện** (có hỏi lại). Ảnh quá 20 MB hoặc không đọc được sẽ được báo rõ.
+3. **Chỉnh sửa** → nhập email, ngày sinh (gõ `15081995` sẽ thành `15/08/1995`), giới tính → **Lưu thông tin**. Quay sang tab Tổng quan: lời chào đổi theo tên mới. Đang sửa dở mà bấm quay lại → app hỏi "Bỏ thay đổi?".
+4. **Đổi mật khẩu**: nhập mật khẩu hiện tại + mật khẩu mới (đủ 4 điều kiện, khác mật khẩu cũ).
+5. **Đăng xuất**: có hỏi lại; đồng ý thì về màn Đăng nhập.
+> Lưu thông tin / ảnh đại diện cần Rules mới: nếu báo "Bạn không có quyền thực hiện thao tác này." hãy Publish lại `firestore.rules`.
 
 ## Cấu hình an toàn
 - `google-services.json`, `.env`, keystore, `firebase_options.dart` đã nằm trong `.gitignore` – **không commit**.
 - Mật khẩu do Firebase Auth băm & lưu; app và Firestore không bao giờ lưu mật khẩu.
-- Phân quyền nằm ở **Firestore Security Rules** (`firestore.rules`): người dùng chỉ tự tạo được hồ sơ `role = customer`, không sửa được `role`/`phone`; chỉ sửa được họ tên, email liên hệ, ngày sinh, giới tính của chính mình.
+- Phân quyền nằm ở **Firestore Security Rules** (`firestore.rules`): người dùng chỉ tự tạo được hồ sơ `role = customer`, không sửa được `role`/`phone`; chỉ sửa được họ tên, email liên hệ, ngày sinh, giới tính và ảnh đại diện (`avatar` – chuỗi, tối đa 200.000 ký tự) của chính mình.
 - Lịch hẹn: Customer chỉ tạo/đọc/hủy lịch của chính mình (tạo luôn ở trạng thái `pending`); Staff đọc tất cả và chỉ được đổi lịch đang chờ sang `confirmed`/`rejected`; không ai được xoá.
 - Hủy lịch: Customer chỉ hủy được lịch của mình khi chưa tới giờ khám; lịch đã xác nhận phải còn ít nhất 2 giờ – Rules kiểm tra theo giờ máy chủ, không chỉ ẩn nút trong app.
 - Quyền riêng tư khi đặt lịch: Customer KHÔNG đọc được lịch hẹn của người khác. Để biết bác sĩ còn trống khung nào, app đọc `busy_slots` – chỉ có bác sĩ + giờ, không có tên hay thông tin khách hàng.
@@ -133,8 +148,8 @@ Công cụ chỉ ghi đè các bản ghi có id cố định ở trên, không �
 flutter analyze
 flutter test
 ```
-- `test/unit/` – SĐT, quy tắc mật khẩu, phân quyền route, AuthController/ProfileController, cách tính số liệu Trang chủ Staff (5 tình huống động), bộ lọc / sắp xếp / tìm kiếm / gom ngày của Lịch đặt và việc khớp số với Tổng quan, dữ liệu mẫu, controller lịch hẹn/thông báo, hồ sơ (email, ngày sinh, đồng bộ sau khi lưu), đổi mật khẩu, khung giờ làm việc (ca 30 phút, trạng thái khung, tổng hợp ngày), phần Đặt lịch của khách hàng (khung bận sinh từ lịch hẹn, trạng thái khung, lọc bác sĩ theo giờ mong muốn / chuyên khoa / tên, kiểm tra trước khi đặt, số ca trống khớp với Lịch làm việc của Staff), số liệu Trang chủ khách hàng, phân nhóm lịch hẹn của khách và quy tắc hủy lịch
-- `test/widget/` – Quên mật khẩu + email khôi phục (luồng đầy đủ tới khi đăng nhập bằng mật khẩu mới), Welcome → Auth, checklist mật khẩu, xác nhận mật khẩu, ẩn/hiện, luồng đăng ký/đăng nhập đầy đủ, Trang chủ Staff (số liệu, xác nhận/từ chối, điều hướng, popup thông báo, loading/empty/error), Trang Lịch đặt (3 bộ lọc, mở chi tiết, xác nhận/từ chối, đồng bộ với Tổng quan, tìm kiếm, lọc trạng thái, mở lại app), tab Tài khoản (hiển thị thông tin lúc tạo tài khoản, sửa hồ sơ, đổi mật khẩu, đăng xuất), tab Lịch làm việc (đổi buổi, đổi ngày, lọc còn trống, đồng bộ với Lịch đặt), khu vực Khách hàng (Trang chủ, lọc bác sĩ, xem bác sĩ + đặt lịch, chống đặt trùng, đồng bộ khi Staff xác nhận / từ chối, tab Cá nhân), tab Lịch hẹn của khách hàng (3 nhóm, chi tiết, hủy lịch theo hạn 2 giờ, thông báo tới nhân viên, đồng bộ sau khi hủy)
+- `test/unit/` – SĐT, quy tắc mật khẩu, phân quyền route, AuthController/ProfileController, cách tính số liệu Trang chủ Staff (5 tình huống động), bộ lọc / sắp xếp / tìm kiếm / gom ngày của Lịch đặt và việc khớp số với Tổng quan, dữ liệu mẫu, controller lịch hẹn/thông báo, hồ sơ (email, ngày sinh, đồng bộ sau khi lưu), đổi mật khẩu, khung giờ làm việc (ca 30 phút, trạng thái khung, tổng hợp ngày), phần Đặt lịch của khách hàng (khung bận sinh từ lịch hẹn, trạng thái khung, lọc bác sĩ theo giờ mong muốn / chuyên khoa / tên, kiểm tra trước khi đặt, số ca trống khớp với Lịch làm việc của Staff), số liệu Trang chủ khách hàng, phân nhóm lịch hẹn của khách và quy tắc hủy lịch, lịch chờ quá giờ hết hiệu lực phía nhân viên, xử lý ảnh đại diện (cắt vuông, thu nhỏ, nén, ảnh hỏng / quá lớn), quy tắc họ tên
+- `test/widget/` – Quên mật khẩu + email khôi phục (luồng đầy đủ tới khi đăng nhập bằng mật khẩu mới), Welcome → Auth, checklist mật khẩu, xác nhận mật khẩu, ẩn/hiện, luồng đăng ký/đăng nhập đầy đủ, Trang chủ Staff (số liệu, xác nhận/từ chối, điều hướng, popup thông báo, loading/empty/error), Trang Lịch đặt (3 bộ lọc, mở chi tiết, xác nhận/từ chối, đồng bộ với Tổng quan, tìm kiếm, lọc trạng thái, mở lại app), tab Tài khoản (hiển thị thông tin lúc tạo tài khoản, sửa hồ sơ, đổi mật khẩu, đăng xuất), tab Lịch làm việc (đổi buổi, đổi ngày, lọc còn trống, đồng bộ với Lịch đặt), khu vực Khách hàng (Trang chủ, lọc bác sĩ, xem bác sĩ + đặt lịch, chống đặt trùng, đồng bộ khi Staff xác nhận / từ chối, tab Cá nhân), tab Lịch hẹn của khách hàng (3 nhóm, chi tiết, hủy lịch theo hạn 2 giờ, thông báo tới nhân viên, đồng bộ sau khi hủy), đổi / xoá ảnh đại diện của Nhân viên và Khách hàng (huỷ chọn, thiếu quyền, ảnh hỏng, lưu thất bại, mở lại app), hỏi trước khi bỏ thay đổi, lối tắt Đăng nhập ↔ Đăng ký
 - `test/snapshot/` – công cụ chụp ảnh giao diện bằng dữ liệu giả (tự bỏ qua khi chạy `flutter test` thông thường)
 - `test/mocks/` – Fake repository (không cần Firebase khi test)
 
@@ -143,7 +158,7 @@ flutter test
 |---|---|
 | Tài khoản đăng nhập (email nội bộ `<sdt>@medibook.local`, hoặc email khôi phục thật sau khi người dùng xác minh + mật khẩu đã băm) | Firebase Authentication |
 | Bảng tra `login_index/{sđt}`: uid, emails (email khôi phục đã xác minh / đang chờ), updatedAt – để đăng nhập bằng SĐT và gửi liên kết đặt lại mật khẩu | Cloud Firestore |
-| Hồ sơ `users/{uid}`: fullName, phone, role, email (liên hệ), birthDate (`yyyy-MM-dd`), gender (`male`/`female`/`other`), profileCompleted, profilePromptDismissed, createdAt, updatedAt | Cloud Firestore |
+| Hồ sơ `users/{uid}`: fullName, phone, role, email (liên hệ), birthDate (`yyyy-MM-dd`), gender (`male`/`female`/`other`), avatar (ảnh đại diện JPEG 256×256 mã hoá base64, rỗng = chưa có), profileCompleted, profilePromptDismissed, createdAt, updatedAt | Cloud Firestore (không dùng Firebase Storage vì dịch vụ này cần gói trả phí Blaze) |
 | Lịch hẹn `appointments/{id}`: customerId, customerName, serviceName, startAt, endAt, status (`pending`/`confirmed`/`rejected`/`cancelled`), doctorId, doctorName (tuỳ chọn), isDemo, createdAt, updatedAt | Cloud Firestore (có bộ đệm trên máy – mở lại app vẫn còn) |
 | Bác sĩ `doctors/{id}`: name, specialty, room, isDemo, experienceYears, bio, fee (3 trường sau tuỳ chọn) | Cloud Firestore |
 | Khung giờ đã có người đặt `busy_slots/{doctorId}_{giờ bắt đầu (ms)}`: doctorId, startAt, appointmentId, isDemo – KHÔNG chứa thông tin khách hàng; luôn được ghi / xoá cùng lúc với lịch hẹn | Cloud Firestore |
@@ -154,5 +169,5 @@ flutter test
 Xem [docs/architecture.md](docs/architecture.md).
 
 ## Dùng AI
-Dự án dùng Claude Code (Anthropic) hỗ trợ phân tích yêu cầu, dựng khung và sinh mã các phần Welcome / Đăng ký / Đăng nhập / Quên mật khẩu / Trang chủ Staff / Trang Lịch đặt / tab Tài khoản / tab Lịch làm việc / khu vực Khách hàng (Trang chủ, Đặt lịch, Lịch hẹn, Cá nhân), kèm các file đặc tả do AI soạn theo yêu cầu. Mọi thay đổi đều được chạy `flutter analyze` và `flutter test` để kiểm chứng.
+Dự án dùng Claude Code (Anthropic) hỗ trợ phân tích yêu cầu, dựng khung và sinh mã các phần Welcome / Đăng ký / Đăng nhập / Quên mật khẩu / Trang chủ Staff / Trang Lịch đặt / tab Tài khoản / tab Lịch làm việc / khu vực Khách hàng (Trang chủ, Đặt lịch, Lịch hẹn, Cá nhân) / ảnh đại diện, kèm các file đặc tả do AI soạn theo yêu cầu. Mọi thay đổi đều được chạy `flutter analyze` và `flutter test` để kiểm chứng.
 - Các file đặc tả (`*.txt`), nhật ký tiến độ từng lượt và hội thoại với AI được lưu riêng, không đưa vào kho mã này.

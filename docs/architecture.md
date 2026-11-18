@@ -97,6 +97,9 @@ Quên mật khẩu:       ForgotPasswordScreen -> tra login_index/{sđt} -> send
 ```
 - Không màn hình nào giữ bản sao họ tên / SĐT / email: sửa ở Cập nhật thông tin thì tab Tài khoản và lời chào Tổng quan đổi ngay.
 - `users/{uid}` có thêm `email` (liên hệ), `birthDate` (`yyyy-MM-dd`), `gender` – tuỳ chọn; `phone` và `role` không sửa được từ app (Rules chặn).
+- Ảnh đại diện (18/11/2026): `users/{uid}.avatar` = JPEG 256×256 base64. `AvatarPicker` (interface; bản thật dùng `image_picker`
+  + `compute(AvatarImage.process)`) chọn và xử lý ảnh → `ProfileController.saveAvatar` ghi Firestore trước, thành công mới
+  `AuthController.updateCurrentUser` → widget `UserAvatar` ở thẻ tài khoản, `StaffHomeHeader` (NV + KH), màn Cập nhật thông tin đổi theo.
 - Đổi mật khẩu: `AuthRepository.changePassword` (Firebase xác thực lại mật khẩu hiện tại rồi mới đổi). Đăng xuất: `AuthController.logout()`.
 - Router chỉ chạy lại redirect khi PHIÊN đổi (`AuthController.sessionChanges`), không chạy khi sửa hồ sơ – tránh việc tải lại route hoàn tác thao tác quay lại sau khi lưu.
 
