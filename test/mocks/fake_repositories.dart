@@ -96,6 +96,7 @@ class FakeAuthRepository implements AuthRepository {
     String email = '',
     DateTime? birthDate,
     UserGender? gender,
+    String avatar = '',
   }) {
     final p = PhoneUtils.normalize(phone);
     _accounts[p] = (
@@ -109,6 +110,7 @@ class FakeAuthRepository implements AuthRepository {
         gender: gender,
         profileCompleted: profileCompleted,
         profilePromptDismissed: profilePromptDismissed,
+        avatar: avatar,
       ),
       password: password,
     );
@@ -214,6 +216,22 @@ class FakeProfileRepository implements ProfileRepository {
       uid,
       (u) => u.withProfile(fullName: fullName, email: email, birthDate: birthDate, gender: gender),
     );
+  }
+
+  final List<String> savedAvatars = [];
+
+  /// Ép lỗi cho lần lưu ảnh kế tiếp.
+  AppFailure? nextAvatarError;
+
+  @override
+  Future<void> updateAvatar({required String uid, required String avatar}) async {
+    final e = nextAvatarError;
+    if (e != null) {
+      nextAvatarError = null;
+      throw e;
+    }
+    savedAvatars.add(avatar);
+    auth?.updateStored(uid, (u) => u.copyWith(avatar: avatar));
   }
 
   @override

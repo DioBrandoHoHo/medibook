@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -7,12 +8,14 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_date_utils.dart';
-import '../../../../core/utils/name_utils.dart';
-import '../../../../core/widgets/state_views.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/domain/entities/user_gender.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/widgets/logout_dialog.dart';
+import '../../domain/repositories/profile_repository.dart';
+import '../controllers/profile_controller.dart';
+import '../widgets/avatar_actions.dart';
+import '../widgets/user_avatar.dart';
 import 'change_password_screen.dart';
 import 'recovery_email_screen.dart';
 
@@ -25,10 +28,10 @@ class StaffAccountScreen extends StatelessWidget {
   const StaffAccountScreen({super.key});
 
   static String genderLabel(UserGender gender) => switch (gender) {
-        UserGender.male => AppStrings.genderMale,
-        UserGender.female => AppStrings.genderFemale,
-        UserGender.other => AppStrings.genderOther,
-      };
+    UserGender.male => AppStrings.genderMale,
+    UserGender.female => AppStrings.genderFemale,
+    UserGender.other => AppStrings.genderOther,
+  };
 
   @override
   Widget build(BuildContext context) =>
@@ -38,7 +41,7 @@ class StaffAccountScreen extends StatelessWidget {
 /// Bố cục trang thông tin tài khoản, dùng chung cho tab "Tài khoản" của Staff và tab
 /// "Cá nhân" của Customer (thong_tin.txt phần 1 + 2). Hai vai trò chỉ khác tiêu đề,
 /// nhãn vai trò và khối [extra] chèn giữa thẻ tài khoản và thẻ thông tin cá nhân.
-class AccountView extends StatelessWidget {
+class AccountView extends StatefulWidget {
   const AccountView({super.key, required this.title, required this.roleLabel, this.extra});
 
   final String title;
@@ -46,7 +49,34 @@ class AccountView extends StatelessWidget {
   final Widget? extra;
 
   @override
+  State<AccountView> createState() => _AccountViewState();
+}
+
+class _AccountViewState extends State<AccountView> {
+  /// Dùng lại ProfileController (cùng luồng lưu với màn Cập nhật thông tin) để lưu ảnh đại diện.
+  late final ProfileController _profile;
+
+  /// Đang xử lý / lưu ảnh -> vòng xoay trên ảnh, chặn bấm lần hai.
+  final _avatarBusy = ValueNotifier<bool>(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = ProfileController(context.read<ProfileRepository>(), context.read<AuthController>());
+  }
+
+  @override
+  void dispose() {
+    _profile.dispose();
+    _avatarBusy.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final title = widget.title;
+    final roleLabel = widget.roleLabel;
+    final extra = widget.extra;
     final user = context.watch<AuthController>().currentUser;
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -70,8 +100,13 @@ class AccountView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    _AccountCard(user: user, roleLabel: roleLabel),
-                    if (extra != null) ...[const SizedBox(height: 14), extra!],
+                    _AccountCard(
+                      user: user,
+                      roleLabel: roleLabel,
+                      busy: _avatarBusy,
+                      onAvatarTap: () => changeAvatar(context, _profile, busy: _avatarBusy),
+                    ),
+                    if (extra != null) ...[const SizedBox(height: 14), extra],
                     if (user.hasMissingInfo) ...[
                       const SizedBox(height: 12),
                       _IncompleteNotice(onTap: () => context.push(AppRoutes.profileEdit)),
@@ -94,10 +129,17 @@ class AccountView extends StatelessWidget {
 
 /// Thẻ tài khoản nền xanh: ảnh đại diện, họ tên, vai trò, số điện thoại.
 class _AccountCard extends StatelessWidget {
-  const _AccountCard({required this.user, required this.roleLabel});
+  const _AccountCard({
+    required this.user,
+    required this.roleLabel,
+    required this.busy,
+    required this.onAvatarTap,
+  });
 
   final AppUser user;
   final String roleLabel;
+  final ValueListenable<bool> busy;
+  final VoidCallback onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -129,18 +171,7 @@ class _AccountCard extends StatelessWidget {
               padding: const EdgeInsets.all(18),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withValues(alpha: 0.35),
-                    ),
-                    child: InitialAvatar(
-                      initial: NameUtils.initial(user.fullName),
-                      radius: 30,
-                      background: Colors.white,
-                    ),
-                  ),
+                  _EditableAvatar(user: user, busy: busy, onTap: onAvatarTap),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -205,6 +236,88 @@ class _AccountCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Ảnh đại diện bấm được để đổi ảnh: biểu tượng máy ảnh nhỏ ở góc gợi ý thao tác,
+/// vòng xoay phủ lên khi đang xử lý / lưu.
+class _EditableAvatar extends StatelessWidget {
+  const _EditableAvatar({required this.user, required this.busy, required this.onTap});
+
+  final AppUser user;
+  final ValueListenable<bool> busy;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: AppStrings.avatarChange,
+      child: Tooltip(
+        message: AppStrings.avatarChange,
+        child: GestureDetector(
+          key: const ValueKey('account_avatar'),
+          onTap: onTap,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.35),
+                ),
+                child: UserAvatar(
+                  name: user.fullName,
+                  avatar: user.avatar,
+                  radius: 32,
+                  background: Colors.white,
+                ),
+              ),
+              ValueListenableBuilder<bool>(
+                valueListenable: busy,
+                builder: (_, isBusy, _) => !isBusy
+                    ? const SizedBox.shrink()
+                    : Positioned.fill(
+                        child: Container(
+                          key: const ValueKey('avatar_busy'),
+                          margin: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.black.withValues(alpha: 0.35),
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.primary, width: 1.5),
+                  ),
+                  child: const Icon(Icons.photo_camera_rounded, size: 15, color: AppColors.primary),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -316,10 +429,7 @@ class _InfoCard extends StatelessWidget {
                   key: const ValueKey('edit_profile'),
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined, size: 17),
-                  label: const Text(
-                    AppStrings.edit,
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
+                  label: const Text(AppStrings.edit, style: TextStyle(fontWeight: FontWeight.w600)),
                 ),
               ],
             ),

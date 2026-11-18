@@ -13,6 +13,7 @@ import '../features/booking/presentation/controllers/busy_slots_controller.dart'
 import '../features/booking/presentation/controllers/doctors_controller.dart';
 import '../features/notifications/domain/repositories/notification_repository.dart';
 import '../features/notifications/presentation/controllers/notifications_controller.dart';
+import '../features/profile/data/avatar_picker.dart';
 import '../features/profile/domain/repositories/profile_repository.dart';
 import 'router/app_router.dart';
 
@@ -26,6 +27,7 @@ class MediBookApp extends StatefulWidget {
     required this.notificationRepository,
     required this.doctorRepository,
     this.clock,
+    this.avatarPicker,
   });
 
   final AuthRepository authRepository;
@@ -37,6 +39,9 @@ class MediBookApp extends StatefulWidget {
   /// Nguồn thời gian (mặc định giờ thiết bị; test truyền giờ cố định).
   final DateTime Function()? clock;
 
+  /// Chọn + xử lý ảnh đại diện (mặc định thư viện ảnh của điện thoại; test truyền bản giả).
+  final AvatarPicker? avatarPicker;
+
   @override
   State<MediBookApp> createState() => _MediBookAppState();
 }
@@ -47,12 +52,16 @@ class _MediBookAppState extends State<MediBookApp> {
 
   // Controller dữ liệu dùng chung. Chúng chỉ bắt đầu lắng nghe khi StaffShell / CustomerShell
   // gọi start(): Staff nghe toàn bộ lịch hẹn, Customer chỉ nghe lịch của mình + khung giờ bận.
-  late final AppointmentsController _appointments =
-      AppointmentsController(widget.appointmentRepository, clock: widget.clock);
-  late final NotificationsController _notifications =
-      NotificationsController(widget.notificationRepository);
+  late final AppointmentsController _appointments = AppointmentsController(
+    widget.appointmentRepository,
+    clock: widget.clock,
+  );
+  late final NotificationsController _notifications = NotificationsController(
+    widget.notificationRepository,
+  );
   late final DoctorsController _doctors = DoctorsController(widget.doctorRepository);
   late final BusySlotsController _busySlots = BusySlotsController(widget.appointmentRepository);
+  late final AvatarPicker _avatarPicker = widget.avatarPicker ?? ImagePickerAvatarPicker();
 
   @override
   void dispose() {
@@ -74,6 +83,7 @@ class _MediBookAppState extends State<MediBookApp> {
         Provider<AppointmentRepository>.value(value: widget.appointmentRepository),
         Provider<NotificationRepository>.value(value: widget.notificationRepository),
         Provider<DoctorRepository>.value(value: widget.doctorRepository),
+        Provider<AvatarPicker>.value(value: _avatarPicker),
         ChangeNotifierProvider<AuthController>.value(value: _auth),
         ChangeNotifierProvider<AppointmentsController>.value(value: _appointments),
         ChangeNotifierProvider<NotificationsController>.value(value: _notifications),

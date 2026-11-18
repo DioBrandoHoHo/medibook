@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/name_utils.dart';
-import '../../../../core/widgets/state_views.dart';
+import '../../../profile/presentation/widgets/user_avatar.dart';
 
 /// Phần đầu Trang chủ trên nền xanh: logo + tên app + slogan, chuông thông báo
 /// (kèm số chưa đọc), ảnh đại diện, và lời chào kèm tên người dùng.
@@ -16,6 +15,7 @@ class StaffHomeHeader extends StatelessWidget {
     this.onBellTap,
     required this.onAvatarTap,
     this.wish = AppStrings.greetingWish,
+    this.avatar = '',
   });
 
   final String staffName;
@@ -25,6 +25,9 @@ class StaffHomeHeader extends StatelessWidget {
 
   /// Dòng chữ nhỏ dưới tên.
   final String wish;
+
+  /// Ảnh đại diện đã lưu của người dùng (`AppUser.avatar`); rỗng = hiện chữ cái đầu.
+  final String avatar;
 
   @override
   Widget build(BuildContext context) {
@@ -168,8 +171,9 @@ class StaffHomeHeader extends StatelessWidget {
               shape: BoxShape.circle,
               color: Colors.white.withValues(alpha: 0.35),
             ),
-            child: InitialAvatar(
-              initial: NameUtils.initial(staffName),
+            child: UserAvatar(
+              name: staffName,
+              avatar: avatar,
               radius: 20,
               background: Colors.white,
             ),

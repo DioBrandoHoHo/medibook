@@ -13,6 +13,9 @@ abstract interface class ProfileRepository {
     UserGender? gender,
   });
 
+  /// Ghi ảnh đại diện (chuỗi base64 của ảnh JPEG đã xử lý). `''` = xoá ảnh.
+  Future<void> updateAvatar({required String uid, required String avatar});
+
   /// Ghi nhận người dùng đã bấm "Để sau": `profilePromptDismissed = true`.
   Future<void> dismissProfilePrompt({required String uid});
 }

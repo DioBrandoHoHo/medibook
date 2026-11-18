@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medibook/app/app.dart';
 import 'package:medibook/core/constants/app_strings.dart';
+import 'package:medibook/features/profile/data/avatar_picker.dart';
 
 import '../mocks/fake_clinic_repositories.dart';
 import '../mocks/fake_repositories.dart';
@@ -22,6 +23,7 @@ Future<void> pumpApp(
   FakeNotificationRepository? notificationRepo,
   FakeDoctorRepository? doctorRepo,
   DateTime Function()? clock,
+  AvatarPicker? avatarPicker,
 }) async {
   usePhoneScreen(tester);
   await tester.pumpWidget(
@@ -33,6 +35,7 @@ Future<void> pumpApp(
       notificationRepository: notificationRepo ?? FakeNotificationRepository(),
       doctorRepository: doctorRepo ?? FakeDoctorRepository(),
       clock: clock,
+      avatarPicker: avatarPicker,
     ),
   );
   await tester.pumpAndSettle();

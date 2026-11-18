@@ -7,7 +7,7 @@ import '../../domain/repositories/profile_repository.dart';
 
 class FirebaseProfileRepository implements ProfileRepository {
   FirebaseProfileRepository({FirebaseFirestore? firestore})
-      : _db = firestore ?? FirebaseFirestore.instance;
+    : _db = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _db;
 
@@ -18,16 +18,19 @@ class FirebaseProfileRepository implements ProfileRepository {
     String email = '',
     DateTime? birthDate,
     UserGender? gender,
-  }) =>
-      _update(
-        uid,
-        UserModel.profileUpdateMap(
-          fullName: fullName.trim(),
-          email: email.trim(),
-          birthDate: birthDate,
-          gender: gender,
-        ),
-      );
+  }) => _update(
+    uid,
+    UserModel.profileUpdateMap(
+      fullName: fullName.trim(),
+      email: email.trim(),
+      birthDate: birthDate,
+      gender: gender,
+    ),
+  );
+
+  @override
+  Future<void> updateAvatar({required String uid, required String avatar}) =>
+      _update(uid, {'avatar': avatar});
 
   @override
   Future<void> dismissProfilePrompt({required String uid}) =>

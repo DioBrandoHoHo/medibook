@@ -17,6 +17,7 @@ class AppUser {
     this.gender,
     this.profileCompleted = false,
     this.profilePromptDismissed = false,
+    this.avatar = '',
   });
 
   final String id; // = Firebase Auth uid
@@ -39,24 +40,35 @@ class AppUser {
   /// true khi người dùng đã bấm "Để sau" ở bước hỏi cập nhật hồ sơ.
   final bool profilePromptDismissed;
 
+  /// Ảnh đại diện: ảnh JPEG vuông 256x256 đã nén, mã hoá base64 (lưu ở trường `avatar`
+  /// của `users/{uid}`). Rỗng = chưa có ảnh -> hiện chữ cái đầu của tên.
+  final String avatar;
+
+  bool get hasAvatar => avatar.isNotEmpty;
+
   /// Có cần hỏi "Bạn có muốn cập nhật thông tin cá nhân không?" hay không.
   bool get shouldAskProfileUpdate => !profileCompleted && !profilePromptDismissed;
 
   /// Còn trường tuỳ chọn nào chưa có dữ liệu không (để nhắc hoàn thiện hồ sơ).
   bool get hasMissingInfo => email.isEmpty || birthDate == null || gender == null;
 
-  AppUser copyWith({String? fullName, bool? profileCompleted, bool? profilePromptDismissed}) =>
-      AppUser(
-        id: id,
-        fullName: fullName ?? this.fullName,
-        phone: phone,
-        role: role,
-        email: email,
-        birthDate: birthDate,
-        gender: gender,
-        profileCompleted: profileCompleted ?? this.profileCompleted,
-        profilePromptDismissed: profilePromptDismissed ?? this.profilePromptDismissed,
-      );
+  AppUser copyWith({
+    String? fullName,
+    bool? profileCompleted,
+    bool? profilePromptDismissed,
+    String? avatar,
+  }) => AppUser(
+    id: id,
+    fullName: fullName ?? this.fullName,
+    phone: phone,
+    role: role,
+    email: email,
+    birthDate: birthDate,
+    gender: gender,
+    profileCompleted: profileCompleted ?? this.profileCompleted,
+    profilePromptDismissed: profilePromptDismissed ?? this.profilePromptDismissed,
+    avatar: avatar ?? this.avatar,
+  );
 
   /// Bản sao sau khi lưu màn Cập nhật thông tin. Khác [copyWith]: các trường tuỳ chọn
   /// được GHI ĐÈ kể cả khi rỗng / null (người dùng xoá dữ liệu đã nhập).
@@ -65,16 +77,16 @@ class AppUser {
     required String email,
     required DateTime? birthDate,
     required UserGender? gender,
-  }) =>
-      AppUser(
-        id: id,
-        fullName: fullName,
-        phone: phone,
-        role: role,
-        email: email,
-        birthDate: birthDate,
-        gender: gender,
-        profileCompleted: true,
-        profilePromptDismissed: profilePromptDismissed,
-      );
+  }) => AppUser(
+    id: id,
+    fullName: fullName,
+    phone: phone,
+    role: role,
+    email: email,
+    birthDate: birthDate,
+    gender: gender,
+    profileCompleted: true,
+    profilePromptDismissed: profilePromptDismissed,
+    avatar: avatar,
+  );
 }

@@ -53,6 +53,7 @@ class CustomerHomeScreen extends StatelessWidget {
           children: [
             StaffHomeHeader(
               staffName: user?.fullName ?? '',
+              avatar: user?.avatar ?? '',
               wish: AppStrings.customerWish,
               onAvatarTap: () =>
                   nav.selectTab(CustomerNavController.profileTab),

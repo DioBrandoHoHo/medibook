@@ -9,11 +9,7 @@ import '../../domain/repositories/profile_repository.dart';
 
 /// Lưu hồ sơ và đồng bộ lại người dùng trong [AuthController].
 class ProfileController extends ChangeNotifier {
-  ProfileController(
-    this._repository,
-    this._auth, {
-    this.saveTimeout = const Duration(seconds: 10),
-  });
+  ProfileController(this._repository, this._auth, {this.saveTimeout = const Duration(seconds: 10)});
 
   final ProfileRepository _repository;
   final AuthController _auth;
@@ -70,6 +66,37 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
+  /// Lưu ảnh đại diện (chuỗi base64 đã xử lý; `''` = xoá ảnh). Cùng nguyên tắc với [save]:
+  /// ghi Firestore TRƯỚC, thành công mới cập nhật [AuthController] -> mọi nơi hiển thị ảnh
+  /// (thẻ tài khoản, phần đầu Trang chủ, màn Cập nhật thông tin) đổi ngay. Thất bại giữ ảnh cũ.
+  Future<bool> saveAvatar(String avatar) async {
+    final user = _auth.currentUser;
+    if (user == null || _isSaving) return false;
+    _isSaving = true;
+    _error = null;
+    notifyListeners();
+    try {
+      await _repository
+          .updateAvatar(uid: user.id, avatar: avatar)
+          .timeout(saveTimeout, onTimeout: () => throw const NetworkFailure());
+      // Đọc lại người dùng hiện tại: trong lúc chờ ghi, hồ sơ có thể đã đổi ở nơi khác.
+      final latest = _auth.currentUser;
+      if (latest != null && latest.id == user.id) {
+        _auth.updateCurrentUser(latest.copyWith(avatar: avatar));
+      }
+      return true;
+    } on AppFailure catch (f) {
+      _error = f.message;
+      return false;
+    } catch (_) {
+      _error = const UnknownFailure().message;
+      return false;
+    } finally {
+      _isSaving = false;
+      notifyListeners();
+    }
+  }
+
   /// Người dùng bấm "Để sau": cập nhật ngay trên app để không chặn việc chuyển trang,
   /// ghi `profilePromptDismissed = true` lên Firestore ở nền.
   /// (Firestore tự đồng bộ lại khi có mạng; nếu ghi thất bại thì lần đăng nhập sau
@@ -78,8 +105,6 @@ class ProfileController extends ChangeNotifier {
     final user = _auth.currentUser;
     if (user == null) return;
     _auth.updateCurrentUser(user.copyWith(profilePromptDismissed: true));
-    unawaited(
-      _repository.dismissProfilePrompt(uid: user.id).catchError((Object _) {}),
-    );
+    unawaited(_repository.dismissProfilePrompt(uid: user.id).catchError((Object _) {}));
   }
 }

@@ -49,6 +49,7 @@ class StaffHomeScreen extends StatelessWidget {
             children: [
               StaffHomeHeader(
                 staffName: staff?.fullName ?? '',
+              avatar: staff?.avatar ?? '',
                 unreadCount: unreadCount,
                 onBellTap: () => NotificationsPopup.show(context),
                 onAvatarTap: () => nav.selectTab(StaffNavController.accountTab),
