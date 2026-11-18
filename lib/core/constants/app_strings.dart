@@ -33,6 +33,14 @@ abstract final class AppStrings {
   static const upcomingTitle = 'Lịch hẹn sắp diễn ra';
   static const seeAll = 'Xem tất cả';
   static const upcomingEmpty = 'Chưa có lịch hẹn nào sắp diễn ra';
+  static String todayRemaining(int count) =>
+      count == 0 ? 'Không còn lịch nào chưa diễn ra' : 'Còn $count lịch chưa diễn ra';
+  static String pendingToday(int count) => 'Hôm nay $count';
+  static String pendingOtherDays(int count) => 'Ngày khác $count';
+  static String pendingOverdue(int count) => '$count lịch đã quá giờ';
+  static String nextPendingAt(String day, String time) => 'Gần nhất: $time, $day';
+  static const noPendingHint = 'Mọi lịch đặt đều đã được xử lý';
+  static String earlierBookings(int count) => 'Kéo xuống để xem $count lịch trước hôm nay';
   static const retry = 'Thử lại';
   static const loadFailed = 'Không tải được dữ liệu';
   static const cancel = 'Hủy';

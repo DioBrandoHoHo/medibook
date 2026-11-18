@@ -10,7 +10,10 @@ class StaffHomeSummary {
     required this.todayPending,
     required this.todayConfirmed,
     required this.todayCancelledOrRejected,
+    required this.todayRemaining,
     required this.pendingAllDays,
+    required this.pendingOverdue,
+    required this.nextPending,
     required this.upcoming,
   });
 
@@ -26,13 +29,25 @@ class StaffHomeSummary {
   /// Lịch Cancelled hoặc Rejected thuộc ngày hôm nay.
   final int todayCancelledOrRejected;
 
+  /// Lịch hôm nay còn hiệu lực (Pending / Confirmed) và CHƯA tới giờ bắt đầu.
+  final int todayRemaining;
+
   /// Lịch Pending ở MỌI ngày (thẻ "Có X lịch đặt mới cần xử lý").
   final int pendingAllDays;
+
+  /// Trong [pendingAllDays]: số lịch đã qua giờ bắt đầu mà vẫn chưa được xử lý.
+  final int pendingOverdue;
+
+  /// Lịch Pending CHƯA tới giờ gần nhất (cần xử lý sớm nhất), `null` nếu không có.
+  final Appointment? nextPending;
 
   /// Tối đa 3 lịch gần nhất chưa diễn ra, chưa bị hủy / từ chối.
   final List<Appointment> upcoming;
 
   static const upcomingLimit = 3;
+
+  /// Chỉ số "Chờ xác nhận" hôm nay luôn nằm trong số "cần xử lý" (mọi ngày).
+  int get pendingOtherDays => pendingAllDays - todayPending;
 
   factory StaffHomeSummary.from(List<Appointment> all, DateTime now) {
     final today = all.where((a) => AppDateUtils.isSameDay(a.startAt, now)).toList();
@@ -41,12 +56,19 @@ class StaffHomeSummary {
     final upcoming = all.where((a) => a.isActive && a.startAt.isAfter(now)).toList()
       ..sort((a, b) => a.startAt.compareTo(b.startAt));
 
+    final pending = all.where((a) => a.isPending).toList();
+    final futurePending = pending.where((a) => a.startAt.isAfter(now)).toList()
+      ..sort((a, b) => a.startAt.compareTo(b.startAt));
+
     return StaffHomeSummary(
       todayTotal: today.length,
       todayPending: countToday((a) => a.status == AppointmentStatus.pending),
       todayConfirmed: countToday((a) => a.status == AppointmentStatus.confirmed),
       todayCancelledOrRejected: countToday((a) => !a.isActive),
-      pendingAllDays: all.where((a) => a.isPending).length,
+      todayRemaining: countToday((a) => a.isActive && a.startAt.isAfter(now)),
+      pendingAllDays: pending.length,
+      pendingOverdue: pending.length - futurePending.length,
+      nextPending: futurePending.isEmpty ? null : futurePending.first,
       upcoming: upcoming.take(upcomingLimit).toList(),
     );
   }

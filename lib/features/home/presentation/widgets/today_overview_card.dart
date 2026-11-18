@@ -50,10 +50,25 @@ class TodayOverviewCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Text(
-                    AppDateUtils.weekdayDate(today),
-                    key: const ValueKey('overview_date'),
-                    style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                  Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        AppDateUtils.weekdayDate(today),
+                        key: const ValueKey('overview_date'),
+                        style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+                      ),
+                      Text(
+                        AppStrings.todayRemaining(summary.todayRemaining),
+                        key: const ValueKey('today_remaining'),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -84,6 +99,7 @@ class TodayOverviewCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        if (summary.todayTotal > 0) ...[_StatusBar(summary: summary), const SizedBox(height: 12)],
         IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -173,37 +189,77 @@ class _StatCard extends StatelessWidget {
         child: InkWell(
           key: ValueKey('stat_card_$name'),
           onTap: onTap,
+          // Dạng gọn: số lớn + icon nhỏ ở hàng trên, nhãn chiếm trọn bề ngang ở hàng dưới
+          // (nhãn dài như "Lịch hẹn hôm nay" vẫn nằm trên một dòng ở màn hình 360dp).
+          // Nhờ thấp hơn, thẻ cần xử lý + 4 chỉ số vừa một màn hình mà không phải cuộn.
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+            padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(icon, color: color, size: 28),
-                const SizedBox(height: 6),
-                Text(
-                  '$value',
-                  key: ValueKey('stat_$name'),
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textPrimary,
-                    height: 1.1,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '$value',
+                      key: ValueKey('stat_$name'),
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        height: 1.1,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(icon, color: color, size: 24),
+                  ],
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   label,
-                  textAlign: TextAlign.center,
                   maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: AppColors.textSecondary,
-                    height: 1.25,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.2),
                 ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Thanh tỉ lệ mảnh: phần cam / xanh lá / đỏ ứng với Chờ xác nhận / Đã xác nhận /
+/// Đã hủy – Từ chối của hôm nay. Cùng màu với 3 thẻ chỉ số bên dưới, nên nhìn là hiểu.
+class _StatusBar extends StatelessWidget {
+  const _StatusBar({required this.summary});
+
+  final StaffHomeSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = [
+      (summary.todayPending, AppColors.warning),
+      (summary.todayConfirmed, AppColors.success),
+      (summary.todayCancelledOrRejected, AppColors.error),
+    ].where((p) => p.$1 > 0).toList();
+    return ClipRRect(
+      key: const ValueKey('today_status_bar'),
+      borderRadius: BorderRadius.circular(4),
+      child: SizedBox(
+        height: 8,
+        child: Row(
+          // stretch: các ô màu (không có nội dung bên trong) lấp đủ chiều cao 8.
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < parts.length; i++) ...[
+              if (i > 0) const SizedBox(width: 2),
+              Expanded(
+                flex: parts[i].$1,
+                child: ColoredBox(color: parts[i].$2),
+              ),
+            ],
+          ],
         ),
       ),
     );

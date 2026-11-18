@@ -7,10 +7,19 @@ import '../../../appointments/domain/entities/appointment.dart';
 import '../../../appointments/presentation/widgets/appointment_tile.dart';
 
 /// Khu vực "Lịch hẹn sắp diễn ra": tối đa 3 lịch gần nhất + nút "Xem tất cả".
+/// Mỗi lịch có tên bác sĩ, ngày dạng gọn và thời gian còn lại nếu là lịch hôm nay.
 class UpcomingList extends StatelessWidget {
-  const UpcomingList({super.key, required this.upcoming, required this.onSeeAll});
+  const UpcomingList({
+    super.key,
+    required this.upcoming,
+    required this.now,
+    required this.onSeeAll,
+  });
 
   final List<Appointment> upcoming;
+
+  /// Giờ hiện tại: để hiện "Hôm nay / Ngày mai" và "còn 25 phút" trên từng lịch.
+  final DateTime now;
   final VoidCallback onSeeAll;
 
   @override
@@ -67,7 +76,7 @@ class UpcomingList extends StatelessWidget {
               for (var i = 0; i < upcoming.length; i++) ...[
                 if (i > 0)
                   const Divider(height: 1, indent: 14, endIndent: 14, color: AppColors.border),
-                AppointmentTile(appointment: upcoming[i]),
+                AppointmentTile(appointment: upcoming[i], now: now, showDoctor: true),
               ],
           ],
         ),

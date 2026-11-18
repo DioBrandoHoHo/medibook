@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:medibook/core/utils/app_date_utils.dart';
 import 'package:medibook/features/appointments/domain/booking_filter.dart';
 import 'package:medibook/features/appointments/domain/entities/appointment.dart';
 import 'package:medibook/features/appointments/domain/entities/appointment_status.dart';
@@ -19,15 +20,15 @@ void main() {
   const cancelled = AppointmentStatus.cancelled;
 
   List<Appointment> sample() => [
-        appt('t1', today(8), status: confirmed), // hôm nay, đã qua
-        appt('t2', today(9), status: cancelled), // hôm nay, đã qua
-        appt('t3', today(11), status: pending),
-        appt('t4', today(12), status: confirmed),
-        appt('t5', today(13), status: rejected),
-        appt('m1', tomorrow(8), status: pending),
-        appt('m2', tomorrow(9), status: confirmed),
-        appt('y1', yesterday(15), status: pending), // hôm qua, vẫn chờ
-      ];
+    appt('t1', today(8), status: confirmed), // hôm nay, đã qua
+    appt('t2', today(9), status: cancelled), // hôm nay, đã qua
+    appt('t3', today(11), status: pending),
+    appt('t4', today(12), status: confirmed),
+    appt('t5', today(13), status: rejected),
+    appt('m1', tomorrow(8), status: pending),
+    appt('m2', tomorrow(9), status: confirmed),
+    appt('y1', yesterday(15), status: pending), // hôm qua, vẫn chờ
+  ];
 
   group('Tổng quan hôm nay', () {
     test('chỉ đếm lịch thuộc ngày hiện tại, phân theo trạng thái', () {
@@ -145,6 +146,60 @@ void main() {
       final r = applyBookingFilter(sample().reversed.toList(), BookingFilter.all, now);
       expect(r.length, 8);
       expect(r.first.id, 'y1');
+    });
+  });
+
+  group('Thẻ cần xử lý – chi tiết (Lượt 18)', () {
+    test('chia số lịch chờ thành hôm nay / ngày khác; quá giờ; lịch chờ gần nhất', () {
+      final s = StaffHomeSummary.from(sample(), now);
+      expect(s.pendingAllDays, 3); // t3, m1, y1
+      expect(s.todayPending, 1);
+      expect(s.pendingOtherDays, 2);
+      expect(s.todayPending + s.pendingOtherDays, s.pendingAllDays);
+      expect(s.pendingOverdue, 1); // y1 đã qua giờ mà chưa xử lý
+      expect(s.nextPending?.id, 't3');
+    });
+
+    test('lịch chờ vừa tới giờ thì chuyển sang "quá giờ", lịch chờ gần nhất là lịch kế tiếp', () {
+      final s = StaffHomeSummary.from(sample(), today(11));
+      expect(s.pendingOverdue, 2); // y1 + t3
+      expect(s.nextPending?.id, 'm1');
+    });
+
+    test('xác nhận lịch chờ duy nhất còn tới -> không còn lịch chờ gần nhất', () {
+      final list = sample()
+          .map((a) => a.isPending && a.startAt.isAfter(now) ? a.copyWith(status: confirmed) : a)
+          .toList();
+      final s = StaffHomeSummary.from(list, now);
+      expect(s.nextPending, isNull);
+      expect(s.pendingAllDays, 1);
+      expect(s.pendingOverdue, 1);
+    });
+
+    test('còn lại hôm nay = lịch hôm nay còn hiệu lực chưa tới giờ', () {
+      expect(StaffHomeSummary.from(sample(), now).todayRemaining, 2); // t3, t4
+      expect(StaffHomeSummary.from(sample(), today(12, 30)).todayRemaining, 0);
+      expect(StaffHomeSummary.from(const [], now).todayRemaining, 0);
+    });
+  });
+
+  group('Nhãn ngày gọn + thời gian còn lại', () {
+    test('shortDayLabel', () {
+      expect(AppDateUtils.shortDayLabel(today(11), now), 'Hôm nay');
+      expect(AppDateUtils.shortDayLabel(tomorrow(8), now), 'Ngày mai');
+      expect(AppDateUtils.shortDayLabel(yesterday(8), now), 'Hôm qua');
+      expect(AppDateUtils.shortDayLabel(DateTime(2026, 11, 19, 8), now), 'T5, 19/11');
+      expect(AppDateUtils.shortDayLabel(DateTime(2027, 1, 4, 8), now), 'T2, 04/01/2027');
+    });
+
+    test('startsIn: chỉ cho lịch hôm nay chưa bắt đầu, làm tròn lên theo phút', () {
+      expect(AppDateUtils.startsIn(today(10, 25), now), 'còn 25 phút');
+      expect(AppDateUtils.startsIn(today(11), now), 'còn 1 giờ');
+      expect(AppDateUtils.startsIn(today(11, 30), now), 'còn 1 giờ 30 phút');
+      expect(AppDateUtils.startsIn(now.add(const Duration(seconds: 20)), now), 'còn 1 phút');
+      expect(AppDateUtils.startsIn(today(9), now), isNull); // đã bắt đầu
+      expect(AppDateUtils.startsIn(now, now), isNull);
+      expect(AppDateUtils.startsIn(tomorrow(8), now), isNull); // ngày khác
     });
   });
 }

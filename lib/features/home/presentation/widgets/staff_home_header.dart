@@ -114,10 +114,7 @@ class StaffHomeHeader extends StatelessWidget {
         Container(
           width: 46,
           height: 46,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(14),
-          ),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
           child: const Icon(Icons.local_hospital_rounded, color: AppColors.primary, size: 28),
         ),
         const SizedBox(width: 10),
@@ -146,16 +143,20 @@ class StaffHomeHeader extends StatelessWidget {
         ),
         if (onBellTap != null)
           IconButton(
-          key: const ValueKey('bell_button'),
-          tooltip: AppStrings.notifications,
-          onPressed: onBellTap,
-          icon: Badge(
-            // Không có thông báo chưa đọc -> ẩn số đỏ (đặc tả 2.1).
-            isLabelVisible: unreadCount > 0,
-            label: Text('$unreadCount', key: const ValueKey('unread_badge')),
-            child: const Icon(Icons.notifications_rounded, size: 27, color: Colors.white),
+            key: const ValueKey('bell_button'),
+            tooltip: AppStrings.notifications,
+            onPressed: onBellTap,
+            icon: Badge(
+              // Không có thông báo chưa đọc -> ẩn số đỏ (đặc tả 2.1).
+              isLabelVisible: unreadCount > 0,
+              // Quá 99 thì hiện "99+" để chấm đỏ không phình to.
+              label: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                key: const ValueKey('unread_badge'),
+              ),
+              child: const Icon(Icons.notifications_rounded, size: 27, color: Colors.white),
+            ),
           ),
-        ),
         const SizedBox(width: 2),
         InkWell(
           key: const ValueKey('staff_avatar'),

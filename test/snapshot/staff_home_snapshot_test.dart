@@ -77,6 +77,8 @@ void main() {
     await shoot('2_popup');
     await tester.tap(find.byTooltip('Đóng'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const ValueKey('see_all')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('see_all')));
     await tester.pumpAndSettle();
     await shoot('3_bookings_all');

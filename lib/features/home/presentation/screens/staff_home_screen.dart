@@ -36,26 +36,45 @@ class StaffHomeScreen extends StatelessWidget {
       // Phần đầu nền xanh tràn lên thanh trạng thái -> dùng icon trạng thái màu sáng.
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            StaffHomeHeader(
-              staffName: staff?.fullName ?? '',
-              unreadCount: unreadCount,
-              onBellTap: () => NotificationsPopup.show(context),
-              onAvatarTap: () => nav.selectTab(StaffNavController.accountTab),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: _buildBody(appointments, nav),
+        // Kéo xuống để làm mới: dữ liệu vốn tự cập nhật theo thời gian thực, nên thao tác này
+        // tính lại theo giờ hiện tại; nếu đang lỗi thì kết nối lại.
+        child: RefreshIndicator(
+          key: const ValueKey('home_refresh'),
+          color: AppColors.primary,
+          onRefresh: () => _refresh(appointments),
+          child: ListView(
+            padding: EdgeInsets.zero,
+            // Luôn kéo được kể cả khi nội dung ngắn hơn màn hình.
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              StaffHomeHeader(
+                staffName: staff?.fullName ?? '',
+                unreadCount: unreadCount,
+                onBellTap: () => NotificationsPopup.show(context),
+                onAvatarTap: () => nav.selectTab(StaffNavController.accountTab),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: _buildBody(appointments, nav),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Future<void> _refresh(AppointmentsController appointments) async {
+    if (appointments.status == LoadStatus.error) {
+      appointments.retry();
+    } else {
+      appointments.refreshClock();
+    }
+    // Giữ vòng xoay một nhịp ngắn để người dùng thấy thao tác đã được nhận.
+    await Future<void>.delayed(const Duration(milliseconds: 400));
   }
 
   /// Phần thân theo 3 trạng thái: đang tải / lỗi (có Thử lại) / có dữ liệu.
@@ -73,22 +92,26 @@ class StaffHomeScreen extends StatelessWidget {
       case LoadStatus.ready:
         // Toàn bộ số liệu được tính tại đây từ MỘT danh sách lịch hẹn.
         final summary = StaffHomeSummary.from(appointments.items, appointments.now);
+        // Thứ bậc: việc CẦN LÀM (lịch chờ xử lý) lên đầu để luôn thấy ngay khi mở app,
+        // tiếp theo là số liệu hôm nay, cuối cùng là các lịch sắp diễn ra.
         return [
+          PendingNoticeCard(
+            summary: summary,
+            now: appointments.now,
+            onTap: () => nav.openBookings(BookingFilter.pending),
+          ),
+          const SizedBox(height: 18),
           TodayOverviewCard(
             summary: summary,
             today: appointments.now,
             // Bấm "Xem chi tiết" hoặc một thẻ chỉ số -> Lịch đặt lọc Hôm nay (+ trạng thái).
-            onOpenToday: (statuses) =>
-                nav.openBookings(BookingFilter.today, statuses: statuses),
-          ),
-          const SizedBox(height: 14),
-          PendingNoticeCard(
-            pendingCount: summary.pendingAllDays,
-            onTap: () => nav.openBookings(BookingFilter.pending),
+            onOpenToday: (statuses) => nav.openBookings(BookingFilter.today, statuses: statuses),
           ),
           const SizedBox(height: 16),
           UpcomingList(
             upcoming: summary.upcoming,
+            now: appointments.now,
+            // "Tất cả" mở sẵn ở vị trí hôm nay (lịch cũ hơn nằm phía trên) – xem StaffBookingsScreen.
             onSeeAll: () => nav.openBookings(BookingFilter.all),
           ),
         ];

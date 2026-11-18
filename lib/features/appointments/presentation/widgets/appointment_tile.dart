@@ -17,12 +17,21 @@ class AppointmentTile extends StatelessWidget {
     required this.appointment,
     this.showCode = false,
     this.footer,
+    this.now,
+    this.showDoctor = false,
   });
 
   final Appointment appointment;
 
   /// Hiện mã lịch cạnh tên dịch vụ (màn Lịch đặt).
   final bool showCode;
+
+  /// Có giá trị -> ngày hiện dạng gọn "Ngày mai" / "T5, 19/11"; lịch hôm nay chưa bắt đầu hiện
+  /// "còn 25 phút" thay cho ngày (Trang chủ). `null` -> ngày đầy đủ dd/MM/yyyy (Lịch đặt).
+  final DateTime? now;
+
+  /// Hiện tên bác sĩ khám ở dòng dưới dịch vụ (nếu lịch đã gắn bác sĩ).
+  final bool showDoctor;
 
   /// Vùng dưới cùng của thẻ (VD nút Xác nhận / Từ chối ở màn Lịch đặt).
   /// Trang chủ không truyền -> không có nút xử lý trên thẻ (trang_chu.txt 2.4).
@@ -31,6 +40,12 @@ class AppointmentTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = appointment;
+    final now = this.now;
+    final doctor = showDoctor ? a.doctorName : null;
+    final dateText = now == null
+        ? AppDateUtils.date(a.startAt)
+        : AppDateUtils.shortDayLabel(a.startAt, now);
+    final startsIn = now == null ? null : AppDateUtils.startsIn(a.startAt, now);
     return InkWell(
       key: ValueKey('appointment_${a.id}'),
       onTap: () => AppointmentDetailScreen.open(context, a.id),
@@ -86,24 +101,62 @@ class AppointmentTile extends StatelessWidget {
                           ],
                         ],
                       ),
+                      if (doctor != null) ...[
+                        const SizedBox(height: 3),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.medical_services_outlined,
+                              size: 15,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                doctor,
+                                key: ValueKey('tile_doctor_${a.id}'),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.access_time_rounded,
-                              size: 15, color: AppColors.textSecondary),
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 15,
+                            color: AppColors.textSecondary,
+                          ),
                           const SizedBox(width: 5),
                           Flexible(
                             child: Text(
-                              '${AppDateUtils.timeRange(a.startAt, a.endAt)}  •  '
-                              '${AppDateUtils.date(a.startAt)}',
+                              // Lịch hôm nay chưa bắt đầu: "còn 25 phút" thay cho chữ "Hôm nay"
+                              // (vừa đủ nghĩa, không bị cắt chữ trên màn hình hẹp).
+                              startsIn == null
+                                  ? '${AppDateUtils.timeRange(a.startAt, a.endAt)}  •  $dateText'
+                                  : '${AppDateUtils.timeRange(a.startAt, a.endAt)}  •  ',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                              ),
+                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                             ),
                           ),
+                          if (startsIn != null)
+                            Text(
+                              startsIn,
+                              key: ValueKey('starts_in_${a.id}'),
+                              style: const TextStyle(
+                                color: AppColors.primary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                         ],
                       ),
                     ],

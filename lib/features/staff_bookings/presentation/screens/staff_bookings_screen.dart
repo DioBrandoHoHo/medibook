@@ -174,9 +174,9 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
 
   Widget _buildSearchField() {
     OutlineInputBorder border(Color color) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: color),
-        );
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(color: color),
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
       child: TextField(
@@ -214,11 +214,7 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
   }
 
   /// Ba bộ lọc chính, kèm số lịch của từng bộ lọc (đếm từ cùng danh sách đang hiển thị).
-  Widget _buildFilterBar(
-    StaffNavController nav,
-    AppointmentsController appointments,
-    bool ready,
-  ) {
+  Widget _buildFilterBar(StaffNavController nav, AppointmentsController appointments, bool ready) {
     return SingleChildScrollView(
       // Cuộn ngang để không tràn trên màn hình hẹp / cỡ chữ lớn.
       scrollDirection: Axis.horizontal,
@@ -296,34 +292,89 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
         );
         if (items.isEmpty) return _buildEmpty(nav);
 
-        // Danh sách phẳng: [số kết quả, tiêu đề ngày, lịch, lịch, tiêu đề ngày, lịch, ...]
-        final rows = <Object>[
-          items.length,
-          for (final group in groupBookingsByDay(items)) ...[group.day, ...group.items],
+        final groups = groupBookingsByDay(items);
+        // "Tất cả" chứa cả lịch cũ (sắp từ cũ tới mới). Để không phải cuộn qua hàng trăm lịch
+        // đã qua, danh sách MỞ SẴN ở hôm nay (hoặc ngày gần nhất phía sau); lịch trước hôm nay
+        // vẫn còn nguyên, chỉ nằm phía trên – kéo xuống là thấy. Khi đang tìm kiếm thì hiện
+        // danh sách thường để không che mất kết quả.
+        final split = nav.filter == BookingFilter.all && nav.query.trim().isEmpty
+            ? groups.indexWhere((g) => !g.day.isBefore(AppDateUtils.dayOnly(now)))
+            : -1;
+
+        List<Object> rowsOf(Iterable<BookingDayGroup> gs) => [
+          for (final g in gs) ...[g.day, ...g.items],
         ];
-        return ListView.builder(
-          key: const ValueKey('bookings_list'),
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-          itemCount: rows.length,
-          itemBuilder: (context, i) {
-            final row = rows[i];
-            if (row is int) {
-              return Padding(
-                padding: const EdgeInsets.only(left: 4, bottom: 2),
-                child: Text(
-                  AppStrings.bookingCount(row),
-                  key: const ValueKey('booking_count'),
-                  style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+        Widget buildRow(Object row) {
+          if (row is DateTime) return _DayHeader(day: row, now: now);
+          final appointment = row as Appointment;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _BookingCard(key: ValueKey('card_${appointment.id}'), appointment: appointment),
+          );
+        }
+
+        final countRow = Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 2),
+          child: Text(
+            AppStrings.bookingCount(items.length),
+            key: const ValueKey('booking_count'),
+            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+        );
+
+        if (split <= 0) {
+          // Không có lịch cũ hơn hôm nay, hoặc mọi lịch đều đã qua -> danh sách thường.
+          final rows = rowsOf(groups);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              countRow,
+              Expanded(
+                child: ListView.builder(
+                  key: const ValueKey('bookings_list'),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  itemCount: rows.length,
+                  itemBuilder: (context, i) => buildRow(rows[i]),
                 ),
-              );
-            }
-            if (row is DateTime) return _DayHeader(day: row, now: now);
-            final appointment = row as Appointment;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _BookingCard(key: ValueKey('card_${appointment.id}'), appointment: appointment),
-            );
-          },
+              ),
+            ],
+          );
+        }
+
+        // Sliver phía trước `center` mọc NGƯỢC lên trên: phần tử 0 nằm sát mốc hôm nay,
+        // nên đảo thứ tự để tiêu đề ngày vẫn nằm trên các lịch của ngày đó.
+        final pastRows = rowsOf(groups.take(split)).reversed.toList();
+        final pastCount = groups.take(split).fold<int>(0, (n, g) => n + g.items.length);
+        final futureRows = rowsOf(groups.skip(split));
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            countRow,
+            Expanded(
+              child: CustomScrollView(
+                key: const ValueKey('bookings_list'),
+                center: const ValueKey('bookings_from_today'),
+                slivers: [
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverList.builder(
+                      itemCount: pastRows.length,
+                      itemBuilder: (context, i) => buildRow(pastRows[i]),
+                    ),
+                  ),
+                  SliverPadding(
+                    key: const ValueKey('bookings_from_today'),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    sliver: SliverList.builder(
+                      itemCount: futureRows.length + 1,
+                      itemBuilder: (context, i) =>
+                          i == 0 ? _EarlierHint(count: pastCount) : buildRow(futureRows[i - 1]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         );
     }
   }
@@ -417,6 +468,39 @@ class _FilterPill extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Dòng nhỏ ở đầu phần "từ hôm nay" của bộ lọc Tất cả: nhắc rằng lịch cũ hơn nằm phía trên.
+class _EarlierHint extends StatelessWidget {
+  const _EarlierHint({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: const ValueKey('earlier_hint'),
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            Icons.keyboard_double_arrow_up_rounded,
+            size: 16,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              AppStrings.earlierBookings(count),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+            ),
+          ),
         ],
       ),
     );
@@ -558,7 +642,12 @@ class _PillButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: EdgeInsets.fromLTRB(icon == null ? 14 : 10, 8, trailingIcon == null ? 14 : 6, 8),
+            padding: EdgeInsets.fromLTRB(
+              icon == null ? 14 : 10,
+              8,
+              trailingIcon == null ? 14 : 6,
+              8,
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

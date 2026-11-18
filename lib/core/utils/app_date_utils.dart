@@ -37,6 +37,32 @@ abstract final class AppDateUtils {
     };
   }
 
+  /// Nhãn ngày gọn cho thẻ: "Hôm nay", "Ngày mai", "Hôm qua", các ngày khác "T5, 19/11"
+  /// (khác năm hiện tại thì thêm năm: "T2, 04/01/2027").
+  static String shortDayLabel(DateTime d, DateTime now) {
+    return switch (daysBetween(now, d)) {
+      0 => 'Hôm nay',
+      1 => 'Ngày mai',
+      -1 => 'Hôm qua',
+      _ =>
+        d.year == now.year
+            ? '${weekdayShort(d)}, ${_two(d.day)}/${_two(d.month)}'
+            : '${weekdayShort(d)}, ${date(d)}',
+    };
+  }
+
+  /// Thời gian còn lại tới [start] khi lịch thuộc HÔM NAY và chưa bắt đầu:
+  /// "còn 25 phút", "còn 2 giờ", "còn 1 giờ 30 phút". Ngày khác / đã bắt đầu -> `null`.
+  static String? startsIn(DateTime start, DateTime now) {
+    if (!isSameDay(start, now) || !start.isAfter(now)) return null;
+    // Làm tròn LÊN theo phút: còn 30 giây vẫn hiện "còn 1 phút", không bao giờ "còn 0 phút".
+    final minutes = (start.difference(now).inSeconds / 60).ceil();
+    if (minutes < 60) return 'còn $minutes phút';
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return m == 0 ? 'còn $h giờ' : 'còn $h giờ $m phút';
+  }
+
   /// Số ngày lịch từ [from] tới [to] (âm nếu [to] trước [from]); bỏ qua giờ phút.
   static int daysBetween(DateTime from, DateTime to) =>
       (dayOnly(to).difference(dayOnly(from)).inHours / 24).round();
