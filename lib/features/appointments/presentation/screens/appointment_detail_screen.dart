@@ -13,10 +13,7 @@ import '../widgets/appointment_actions.dart';
 import '../widgets/appointment_tile.dart';
 import '../widgets/status_chip.dart';
 
-/// Chi tiết lịch hẹn cho Staff: thông tin lịch + Xác nhận / Từ chối (chỉ với lịch đang chờ).
-///
-/// Màn này chỉ nhận ID, rồi đọc lịch từ [AppointmentsController] (cùng danh sách với
-/// Tổng quan và Lịch đặt) nên luôn hiển thị trạng thái mới nhất, không có bản sao dữ liệu.
+/// Chi tiết lịch hẹn cho Staff.
 class AppointmentDetailScreen extends StatefulWidget {
   const AppointmentDetailScreen({super.key, required this.appointmentId});
 
@@ -63,7 +60,6 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
               ),
             )
           : _buildContent(appointment),
-      // Chỉ lịch đang chờ và CHƯA quá giờ mới được xác nhận / từ chối.
       bottomNavigationBar:
           appointment != null && appointment.isPending && !appointment.isOverdueAt(_now)
           ? _buildActions(appointment)
@@ -115,8 +111,6 @@ class _AppointmentDetailScreenState extends State<AppointmentDetailScreen> {
         ),
         const SizedBox(height: 12),
         _StatusNote(status: a.status),
-        // Lịch chờ đã qua giờ hẹn mà chưa xử lý -> hết hiệu lực, không còn nút xử lý.
-        // (Chỉ tới được đây từ thông báo cũ; danh sách của nhân viên đã ẩn lịch này.)
         if (a.isOverdueAt(_now)) ...[
           const SizedBox(height: 8),
           Container(

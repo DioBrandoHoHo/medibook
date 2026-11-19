@@ -10,7 +10,7 @@ import '../widgets/auth_mode_switch.dart';
 import '../widgets/login_form.dart';
 import '../widgets/register_form.dart';
 
-/// Màn xác thực chung (Mục 3): chuyển đổi giữa Đăng nhập và Đăng ký.
+/// Màn xác thực chung.
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
 
@@ -21,7 +21,7 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
 
-  /// SĐT đang gõ – giữ lại khi chuyển giữa Đăng nhập và Đăng ký (không giữ mật khẩu).
+  /// SĐT đang gõ.
   String _phone = '';
 
   void _setMode(bool isLogin) {

@@ -7,8 +7,7 @@ import '../../domain/entities/appointment_status.dart';
 abstract final class AppointmentModel {
   static const collection = 'appointments';
 
-  /// Trả về `null` nếu document thiếu/sai kiểu trường bắt buộc
-  /// (VD document nhập tay trên Firebase Console bị thiếu `startAt`) để app không crash.
+  /// Trả về `null` nếu document thiếu/sai kiểu trường bắt buộc.
   static Appointment? fromMap(String id, Map<String, dynamic> data) {
     final startAt = data['startAt'];
     final endAt = data['endAt'];
@@ -35,9 +34,8 @@ abstract final class AppointmentModel {
         'serviceName': a.serviceName,
         'startAt': Timestamp.fromDate(a.startAt),
         'endAt': Timestamp.fromDate(a.endAt),
-        'status': a.status.name, // pending | confirmed | rejected | cancelled
+        'status': a.status.name,
         'isDemo': a.isDemo,
-        // Chỉ ghi khi có -> lịch cũ / lịch chưa chọn bác sĩ giữ nguyên cấu trúc.
         if (a.doctorId != null) 'doctorId': a.doctorId!,
         if (a.doctorName != null) 'doctorName': a.doctorName!,
       };

@@ -3,18 +3,10 @@ import '../../../core/utils/text_utils.dart';
 import 'entities/appointment.dart';
 import 'entities/appointment_status.dart';
 
-/// Ba bộ lọc chính của màn Lịch đặt (lich_dat.txt 3.2).
+/// Ba bộ lọc chính của màn Lịch đặt.
 enum BookingFilter { all, today, pending }
 
-/// Lọc + sắp xếp danh sách lịch cho màn Lịch đặt. Hàm thuần Dart để unit test.
-///
-/// - [filter]: Tất cả / Hôm nay (mọi trạng thái) / Chờ xác nhận (mọi ngày).
-/// - [statuses]: lọc nâng cao theo trạng thái; rỗng = không lọc thêm.
-/// - [query]: tìm theo tên khách, dịch vụ, tên bác sĩ hoặc mã lịch (không phân biệt hoa thường / dấu).
-///
-/// Lịch chờ đã quá giờ (`isOverdueAt`) bị bỏ khỏi MỌI bộ lọc (quy tắc chốt 18/11/2026).
-///
-/// Kết quả luôn sắp theo thời điểm bắt đầu (kiểu DateTime, không so chuỗi) tăng dần.
+/// Lọc + sắp xếp danh sách lịch cho màn Lịch đặt.
 List<Appointment> applyBookingFilter(
   List<Appointment> all,
   BookingFilter filter,
@@ -39,7 +31,6 @@ List<Appointment> applyBookingFilter(
   return all
       .where(
         (a) =>
-            // Lịch chờ đã quá giờ đã hết hiệu lực phía nhân viên -> không hiện ở bộ lọc nào.
             a.isStaffVisibleAt(now) &&
             matchesFilter(a) &&
             (statuses.isEmpty || statuses.contains(a.status)) &&
@@ -71,8 +62,7 @@ List<BookingDayGroup> groupBookingsByDay(List<Appointment> sorted) {
   return groups;
 }
 
-/// Đếm số lịch theo từng trạng thái trong [items] (VD danh sách sau bộ lọc chính) –
-/// để bảng "Lọc theo trạng thái" hiện số lịch bên cạnh mỗi lựa chọn.
+/// Đếm số lịch theo từng trạng thái trong [items].
 Map<AppointmentStatus, int> countByStatus(Iterable<Appointment> items) {
   final counts = {for (final s in AppointmentStatus.values) s: 0};
   for (final a in items) {

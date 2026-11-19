@@ -1,8 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Thông báo / nhắc lịch khám cho khách hàng (flutter_local_notifications).
-         POST_NOTIFICATIONS: Android 13+ phải xin quyền hiển thị thông báo.
-         RECEIVE_BOOT_COMPLETED: hẹn lại các lời nhắc sau khi điện thoại khởi động lại.
-         Không dùng SCHEDULE_EXACT_ALARM: lời nhắc hẹn giờ kiểu "inexact" (có thể lệch vài phút). -->
+    <!-- Thông báo nhắc lịch khám -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <application

@@ -16,10 +16,7 @@ import '../../features/schedule/presentation/screens/work_schedule_screen.dart';
 import '../../features/staff_bookings/presentation/screens/staff_bookings_screen.dart';
 import 'staff_nav_controller.dart';
 
-/// Khung điều hướng 4 tab của Staff: Tổng quan / Lịch đặt / Lịch làm việc / Tài khoản.
-///
-/// Khi Staff vào khu vực này, shell bắt đầu lắng nghe lịch hẹn + thông báo;
-/// khi rời đi (đăng xuất) thì ngừng lắng nghe.
+/// Khung điều hướng 4 tab của Staff.
 class StaffShell extends StatefulWidget {
   const StaffShell({super.key});
 
@@ -48,23 +45,19 @@ class _StaffShellState extends State<StaffShell> with WidgetsBindingObserver {
     _notifications = context.read<NotificationsController>()..start();
     _doctors = context.read<DoctorsController>()..start();
     WidgetsBinding.instance.addObserver(this);
-    // Mỗi phút tính lại theo giờ hiện tại: lịch vừa tới giờ rời khỏi "sắp diễn ra",
-    // và sang ngày mới thì "Hôm nay" đổi theo dù app đang mở sẵn.
     _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) => _appointments.refreshClock());
   }
 
-  /// Mở lại app từ nền -> tính lại theo giờ hiện tại (VD đã sang ngày mới).
+  /// Mở lại app từ nền.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     _appointments.refreshClock();
-    // Vừa bấm liên kết xác minh email khôi phục trong ứng dụng email -> tiếp tục phiên ngầm.
     context.read<AuthController>().checkPendingRecovery();
   }
 
   void _onTabSelected(int index) {
     _nav.selectTab(index);
-    // Đổi tab -> tính lại số liệu / bộ lọc "Hôm nay" theo thời điểm hiện tại.
     _appointments.refreshClock();
   }
 
@@ -84,11 +77,9 @@ class _StaffShellState extends State<StaffShell> with WidgetsBindingObserver {
     return ChangeNotifierProvider<StaffNavController>.value(
       value: _nav,
       child: ListenableBuilder(
-        // Nghe cả danh sách lịch hẹn để số lịch chờ trên tab Lịch đặt luôn khớp dữ liệu.
         listenable: Listenable.merge([_nav, _appointments]),
         builder: (context, _) => Scaffold(
           body: IndexedStack(index: _nav.index, children: _pages),
-          // Mục đang chọn có màu xanh dương (đặc tả 2.5).
           bottomNavigationBar: NavigationBarTheme(
             data: NavigationBarThemeData(
               backgroundColor: Colors.white,
@@ -110,7 +101,6 @@ class _StaffShellState extends State<StaffShell> with WidgetsBindingObserver {
               ),
             ),
             child: DecoratedBox(
-              // Đường kẻ mảnh tách thanh điều hướng với nội dung (dùng chung mọi tab Staff).
               decoration: const BoxDecoration(
                 border: Border(top: BorderSide(color: AppColors.border)),
               ),
@@ -153,8 +143,7 @@ class _StaffShellState extends State<StaffShell> with WidgetsBindingObserver {
     );
   }
 
-  /// Số lịch đang chờ xác nhận ở mọi ngày – đếm từ danh sách lịch hẹn chung,
-  /// nên luôn bằng số trên thẻ "Có X lịch đặt mới cần xử lý" và bộ lọc Chờ xác nhận.
+  /// Số lịch đang chờ xác nhận ở mọi ngày.
   int get _pendingCount =>
       applyBookingFilter(_appointments.items, BookingFilter.pending, _appointments.now).length;
 
@@ -162,7 +151,7 @@ class _StaffShellState extends State<StaffShell> with WidgetsBindingObserver {
       states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondary;
 }
 
-/// Chấm số trên icon tab Lịch đặt; ẩn khi không còn lịch chờ.
+/// Chấm số trên icon tab Lịch đặt.
 class _PendingBadge extends StatelessWidget {
   const _PendingBadge({required this.count, required this.child});
 

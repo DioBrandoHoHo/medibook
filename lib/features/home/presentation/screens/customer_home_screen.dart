@@ -21,13 +21,7 @@ import '../../../booking/presentation/widgets/doctor_card.dart';
 import '../../domain/customer_home_summary.dart';
 import '../widgets/staff_home_header.dart';
 
-/// Trang chủ của Customer (trang_chu.txt phần 2).
-///
-/// Màn này KHÔNG giữ số liệu riêng:
-/// - lịch hẹn của khách đọc từ `AppointmentsController.items` rồi tính bằng [CustomerHomeSummary];
-/// - bác sĩ đọc từ `DoctorsController`, số ca trống tính bằng [applyDoctorFilter] từ
-///   `BusySlotsController` – cùng hàm và cùng nguồn với tab Đặt lịch.
-/// Vì vậy Staff xác nhận / từ chối, hay có người đặt mất một khung, thì trang tự đổi theo.
+/// Trang chủ của Customer.
 class CustomerHomeScreen extends StatelessWidget {
   const CustomerHomeScreen({super.key});
 
@@ -117,7 +111,6 @@ class CustomerHomeScreen extends StatelessWidget {
       else
         _NextAppointmentCard(
           appointment: next,
-          // Phòng khám lấy từ danh sách bác sĩ hiện tại (đổi phòng thì thẻ đổi theo).
           room: doctors.byId(next.doctorId ?? '')?.room ?? '',
           now: now,
         ),
@@ -346,7 +339,7 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-/// Thẻ nổi bật: lịch hẹn gần nhất của khách.
+/// Thẻ nổi bật.
 class _NextAppointmentCard extends StatelessWidget {
   const _NextAppointmentCard({
     required this.appointment,
@@ -485,7 +478,7 @@ class _NextAppointmentCard extends StatelessWidget {
   }
 }
 
-/// Thẻ khi khách chưa có lịch hẹn sắp tới: mời đặt lịch.
+/// Thẻ khi khách chưa có lịch hẹn sắp tới.
 class _NoUpcomingCard extends StatelessWidget {
   const _NoUpcomingCard({required this.onBook});
 
@@ -617,7 +610,6 @@ class _UpcomingRow extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
         child: Row(
           children: [
-            // Ô ngày: thứ + ngày/tháng.
             Container(
               width: 50,
               padding: const EdgeInsets.symmetric(vertical: 6),

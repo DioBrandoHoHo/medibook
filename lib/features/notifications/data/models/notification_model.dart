@@ -12,7 +12,6 @@ abstract final class NotificationModel {
       id: id,
       title: data['title'] as String? ?? 'Thông báo',
       body: data['body'] as String? ?? '',
-      // Thông báo vừa ghi, máy chủ chưa kịp gán giờ -> tạm dùng giờ hiện tại.
       createdAt: createdAt is Timestamp ? createdAt.toDate() : DateTime.now(),
       isRead: data['isRead'] == true,
       appointmentId: data['appointmentId'] as String?,

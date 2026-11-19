@@ -10,12 +10,7 @@ import '../../../home/domain/customer_home_summary.dart';
 import '../../../notifications/presentation/controllers/customer_alerts_controller.dart';
 import 'staff_account_screen.dart';
 
-/// Tab "Cá nhân" của Customer (thong_tin.txt phần 2).
-///
-/// Dùng lại đúng bố cục [AccountView] của Staff: thông tin đọc từ `AuthController.currentUser`
-/// (document `users/{uid}` tạo lúc đăng ký), nên họ tên / số điện thoại ở đây, ở lời chào
-/// Trang chủ và ở bảng xác nhận đặt lịch luôn là một. Khác Staff: nhãn "Khách hàng" và
-/// thêm thẻ "Lịch hẹn của tôi".
+/// Tab "Cá nhân" của Customer.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
@@ -33,8 +28,7 @@ class ProfileScreen extends StatelessWidget {
       );
 }
 
-/// Công tắc "Thông báo lịch hẹn": báo khi phòng khám xác nhận / từ chối và nhắc trước giờ khám.
-/// Nếu hệ điều hành đang chặn thông báo của app thì hiện dòng hướng dẫn bật lại trong Cài đặt.
+/// Công tắc "Thông báo lịch hẹn".
 class _AlertsCard extends StatelessWidget {
   const _AlertsCard();
 
@@ -86,8 +80,7 @@ class _AlertsCard extends StatelessWidget {
   }
 }
 
-/// Số lịch hẹn sắp tới của khách – tính bằng [CustomerHomeSummary], cùng hàm với Trang chủ,
-/// nên hai nơi luôn hiện cùng con số. Bấm vào để sang tab Lịch hẹn.
+/// Số lịch hẹn sắp tới của khách.
 class _MyAppointmentsCard extends StatelessWidget {
   const _MyAppointmentsCard();
 

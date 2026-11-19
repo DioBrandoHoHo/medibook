@@ -32,17 +32,14 @@ class AvatarPickFailed extends AvatarPickResult {
 }
 
 /// Lấy ảnh từ thư viện của điện thoại và chuẩn bị ảnh để lưu.
-/// Tách thành interface để test thay bằng bản giả (không mở thư viện, không chạy isolate).
 abstract interface class AvatarPicker {
   Future<AvatarPickResult> pickFromGallery();
 
-  /// Cắt vuông + thu nhỏ + nén ([AvatarImage.process]). Ném [AvatarImageException].
+  /// Cắt vuông + thu nhỏ + nén.
   Future<String> prepare(Uint8List bytes);
 }
 
-/// Bản thật dùng `image_picker`. Trên Android 13+ đây là Photo Picker của hệ thống – KHÔNG cần
-/// xin quyền đọc bộ nhớ; Android cũ hơn dùng trình chọn file của hệ thống.
-/// `maxWidth/maxHeight` để hệ thống thu nhỏ trước, giảm bộ nhớ khi app cắt và nén lại.
+/// Bản thật dùng `image_picker`.
 class ImagePickerAvatarPicker implements AvatarPicker {
   ImagePickerAvatarPicker({ImagePicker? picker}) : _picker = picker ?? ImagePicker();
 

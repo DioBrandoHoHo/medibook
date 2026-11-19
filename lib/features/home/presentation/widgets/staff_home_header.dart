@@ -4,9 +4,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../profile/presentation/widgets/user_avatar.dart';
 
-/// Phần đầu Trang chủ trên nền xanh: logo + tên app + slogan, chuông thông báo
-/// (kèm số chưa đọc), ảnh đại diện, và lời chào kèm tên người dùng.
-/// Trang chủ Customer dùng lại widget này, không có chuông ([onBellTap] = null).
+/// Phần đầu Trang chủ trên nền xanh.
 class StaffHomeHeader extends StatelessWidget {
   const StaffHomeHeader({
     super.key,
@@ -26,7 +24,7 @@ class StaffHomeHeader extends StatelessWidget {
   /// Dòng chữ nhỏ dưới tên.
   final String wish;
 
-  /// Ảnh đại diện đã lưu của người dùng (`AppUser.avatar`); rỗng = hiện chữ cái đầu.
+  /// Ảnh đại diện đã lưu của người dùng.
   final String avatar;
 
   @override
@@ -43,7 +41,6 @@ class StaffHomeHeader extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            // Hoạ tiết trang trí (thay cho ảnh minh hoạ trong bản thiết kế).
             const Positioned(right: -46, top: -30, child: _Bubble(size: 170, alpha: 0.10)),
             const Positioned(right: 70, bottom: -70, child: _Bubble(size: 150, alpha: 0.07)),
             Positioned(
@@ -113,7 +110,6 @@ class StaffHomeHeader extends StatelessWidget {
   Widget _buildTopRow() {
     return Row(
       children: [
-        // Logo dựng bằng icon (chưa có file logo).
         Container(
           width: 46,
           height: 46,
@@ -150,9 +146,7 @@ class StaffHomeHeader extends StatelessWidget {
             tooltip: AppStrings.notifications,
             onPressed: onBellTap,
             icon: Badge(
-              // Không có thông báo chưa đọc -> ẩn số đỏ (đặc tả 2.1).
               isLabelVisible: unreadCount > 0,
-              // Quá 99 thì hiện "99+" để chấm đỏ không phình to.
               label: Text(
                 unreadCount > 99 ? '99+' : '$unreadCount',
                 key: const ValueKey('unread_badge'),

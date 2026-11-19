@@ -5,8 +5,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../controllers/auth_controller.dart';
 
-/// Hỏi lại rồi đăng xuất. Dùng chung cho tab Tài khoản (Staff) và tab Cá nhân (Customer).
-/// Đồng ý -> xoá phiên; router tự đưa về màn Đăng nhập.
+/// Hỏi lại rồi đăng xuất.
 Future<void> confirmLogout(BuildContext context) async {
   final auth = context.read<AuthController>();
   final agreed = await showDialog<bool>(

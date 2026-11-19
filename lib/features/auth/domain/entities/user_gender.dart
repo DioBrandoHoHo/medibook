@@ -1,10 +1,10 @@
-/// Giới tính trong hồ sơ (tuỳ chọn). Lưu trên Firestore bằng `name`: male | female | other.
+/// Giới tính trong hồ sơ.
 enum UserGender {
   male,
   female,
   other;
 
-  /// Giá trị lạ hoặc thiếu -> `null` (chưa cập nhật).
+  /// Giá trị lạ hoặc thiếu.
   static UserGender? fromString(String? value) {
     for (final g in values) {
       if (g.name == value) return g;

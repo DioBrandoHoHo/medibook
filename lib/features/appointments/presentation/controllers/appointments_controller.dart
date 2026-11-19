@@ -11,11 +11,7 @@ import '../../domain/repositories/appointment_repository.dart';
 
 enum LoadStatus { loading, ready, error }
 
-/// Giữ MỘT danh sách lịch hẹn duy nhất cho khu vực đang đăng nhập:
-/// - Staff: toàn bộ lịch hẹn (`start()`).
-/// - Customer: lịch hẹn của chính mình (`start(customerId: ...)`).
-/// Mọi màn hình đọc từ danh sách này nên số liệu ở mọi nơi luôn khớp nhau.
-/// Không có biến đếm riêng.
+/// Giữ MỘT danh sách lịch hẹn duy nhất cho khu vực đang đăng nhập.
 class AppointmentsController extends ChangeNotifier {
   AppointmentsController(this._repository, {DateTime Function()? clock})
       : _clock = clock ?? DateTime.now;
@@ -32,7 +28,7 @@ class AppointmentsController extends ChangeNotifier {
   LoadStatus get status => _status;
   String? get errorMessage => _errorMessage;
 
-  /// Thời điểm hiện tại (truyền được giờ giả khi test).
+  /// Thời điểm hiện tại.
   DateTime get now => _clock();
 
   Appointment? byId(String id) {
@@ -45,7 +41,6 @@ class AppointmentsController extends ChangeNotifier {
   String? _customerId;
 
   /// Bắt đầu lắng nghe dữ liệu (gọi khi người dùng vào khu vực của mình).
-  /// Truyền [customerId] -> chỉ lắng nghe lịch hẹn của khách hàng đó.
   void start({String? customerId}) {
     _customerId = customerId;
     _subscription?.cancel();
@@ -87,14 +82,13 @@ class AppointmentsController extends ChangeNotifier {
   /// Tính lại theo thời điểm hiện tại (quay lại Trang chủ, mở lại app, sang ngày mới).
   void refreshClock() => notifyListeners();
 
-  /// Staff xác nhận lịch. Trả về `null` nếu thành công, hoặc thông báo lỗi.
+  /// Staff xác nhận lịch.
   Future<String?> confirm(String id) => _changeStatus(id, AppointmentStatus.confirmed);
 
-  /// Staff từ chối lịch. Trả về `null` nếu thành công, hoặc thông báo lỗi.
+  /// Staff từ chối lịch.
   Future<String?> reject(String id) => _changeStatus(id, AppointmentStatus.rejected);
 
-  /// Customer đặt lịch với bác sĩ. Trả về `null` nếu thành công, hoặc thông báo lỗi.
-  /// Chỉ ghi vào nguồn dữ liệu; danh sách và khung giờ tự đổi khi stream phát dữ liệu mới.
+  /// Customer đặt lịch với bác sĩ.
   Future<String?> book({
     required String customerId,
     required String customerName,
@@ -122,8 +116,7 @@ class AppointmentsController extends ChangeNotifier {
     }
   }
 
-  /// Customer hủy lịch của mình. Trả về `null` nếu thành công, hoặc thông báo lỗi.
-  /// Quy tắc (hạn 2 giờ với lịch đã xác nhận...) được kiểm tra lại theo dữ liệu MỚI NHẤT.
+  /// Customer hủy lịch của mình.
   Future<String?> cancel(String id) async {
     final current = byId(id);
     if (current == null) return AppStrings.appointmentNotFound;
@@ -140,13 +133,10 @@ class AppointmentsController extends ChangeNotifier {
   }
 
   Future<String?> _changeStatus(String id, AppointmentStatus status) async {
-    // Lịch đã được xử lý ở nơi khác (VD khách vừa hủy) -> báo rõ, không ghi đè.
     final current = byId(id);
     if (current != null && !current.isPending) return AppStrings.errAlreadyHandled;
-    // Lịch chờ đã quá giờ hết hiệu lực (quy tắc 18/11/2026) -> không xác nhận / từ chối nữa.
     if (current != null && current.isOverdueAt(now)) return AppStrings.errExpired;
     try {
-      // Chỉ ghi vào nguồn dữ liệu. Giao diện tự đổi khi stream phát danh sách mới.
       await _repository.updateStatus(id, status);
       return null;
     } on AppFailure catch (e) {

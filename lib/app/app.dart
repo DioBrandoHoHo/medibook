@@ -20,7 +20,7 @@ import '../features/profile/data/avatar_picker.dart';
 import '../features/profile/domain/repositories/profile_repository.dart';
 import 'router/app_router.dart';
 
-/// Widget gốc. Repository được truyền vào (Firebase khi chạy thật, Fake khi test).
+/// Widget gốc.
 class MediBookApp extends StatefulWidget {
   const MediBookApp({
     super.key,
@@ -41,14 +41,13 @@ class MediBookApp extends StatefulWidget {
   final NotificationRepository notificationRepository;
   final DoctorRepository doctorRepository;
 
-  /// Nguồn thời gian (mặc định giờ thiết bị; test truyền giờ cố định).
+  /// Nguồn thời gian.
   final DateTime Function()? clock;
 
-  /// Chọn + xử lý ảnh đại diện (mặc định thư viện ảnh của điện thoại; test truyền bản giả).
+  /// Chọn + xử lý ảnh đại diện.
   final AvatarPicker? avatarPicker;
 
-  /// Thông báo của hệ điều hành + bộ nhớ trên máy cho thông báo / nhắc lịch của khách hàng
-  /// (mặc định bản thật; test truyền bản giả).
+  /// Thông báo / nhắc lịch của khách hàng.
   final LocalNotifications? localNotifications;
   final AlertStore? alertStore;
 
@@ -60,8 +59,6 @@ class _MediBookAppState extends State<MediBookApp> {
   late final AuthController _auth = AuthController(widget.authRepository);
   late final GoRouter _router = createAppRouter(_auth);
 
-  // Controller dữ liệu dùng chung. Chúng chỉ bắt đầu lắng nghe khi StaffShell / CustomerShell
-  // gọi start(): Staff nghe toàn bộ lịch hẹn, Customer chỉ nghe lịch của mình + khung giờ bận.
   late final AppointmentsController _appointments = AppointmentsController(
     widget.appointmentRepository,
     clock: widget.clock,

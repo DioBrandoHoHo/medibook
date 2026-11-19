@@ -12,8 +12,7 @@ import '../../domain/schedule_builder.dart';
 import '../../domain/work_shift.dart';
 import 'slot_style.dart';
 
-/// Thẻ lịch làm việc của MỘT bác sĩ: thông tin bác sĩ, nút chọn Sáng / Chiều
-/// và lưới các khung 30 phút của buổi đang xem.
+/// Thẻ lịch làm việc của MỘT bác sĩ.
 class DoctorScheduleCard extends StatelessWidget {
   const DoctorScheduleCard({
     super.key,
@@ -26,7 +25,7 @@ class DoctorScheduleCard extends StatelessWidget {
   final Doctor doctor;
   final WorkShift shift;
 
-  /// Các khung của [shift] (đã tính sẵn từ danh sách lịch hẹn chung).
+  /// Các khung của [shift].
   final List<TimeSlot> slots;
   final ValueChanged<WorkShift> onShiftChanged;
 
@@ -78,7 +77,6 @@ class DoctorScheduleCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              // Số khung còn trống của buổi đang xem.
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                 decoration: BoxDecoration(
@@ -225,7 +223,6 @@ class _SlotTile extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           key: ValueKey('slot_${doctorId}_${time.replaceAll(':', '')}'),
-          // Chỉ khung có lịch mới bấm được -> mở Chi tiết của đúng lịch đó.
           onTap: appointment == null
               ? null
               : () => AppointmentDetailScreen.open(context, appointment.id),

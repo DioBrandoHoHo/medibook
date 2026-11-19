@@ -7,12 +7,7 @@ import '../../../../core/utils/app_date_utils.dart';
 import '../../domain/entities/appointment.dart';
 import '../controllers/appointments_controller.dart';
 
-/// Luồng Xác nhận / Từ chối DÙNG CHUNG cho thẻ ở màn Lịch đặt và màn Chi tiết:
-/// hỏi lại -> ghi vào nguồn dữ liệu qua [AppointmentsController] -> báo kết quả.
-///
-/// Hàm này không tự sửa giao diện: sau khi ghi thành công, stream dữ liệu phát danh sách mới
-/// và mọi màn hình (Lịch đặt, Chi tiết, Tổng quan) tự cập nhật theo.
-/// Trả về `true` nếu đã đổi trạng thái thành công.
+/// Luồng Xác nhận / Từ chối DÙNG CHUNG cho thẻ ở màn Lịch đặt và màn Chi tiết.
 Future<bool> runAppointmentAction(
   BuildContext context,
   Appointment appointment, {

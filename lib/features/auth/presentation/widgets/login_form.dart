@@ -12,11 +12,11 @@ import 'auth_error_banner.dart';
 import 'auth_form_parts.dart';
 import 'password_field.dart';
 
-/// Form Đăng nhập (Mục 5): SĐT + mật khẩu.
+/// Form Đăng nhập.
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key, this.initialPhone = '', this.onPhoneChanged, this.onGoToRegister});
 
-  /// SĐT đang gõ ở chế độ kia (giữ lại khi chuyển Đăng ký -> Đăng nhập).
+  /// SĐT đang gõ ở chế độ Đăng ký.
   final String initialPhone;
   final ValueChanged<String>? onPhoneChanged;
 
@@ -48,7 +48,6 @@ class _LoginFormState extends State<LoginForm> {
     final auth = context.read<AuthController>();
     final ok = await auth.login(phone: _phone.text, password: _password.text);
     if (!mounted || !ok) return;
-    // Báo trình quản lý mật khẩu lưu SĐT + mật khẩu vừa đăng nhập thành công.
     TextInput.finishAutofillContext();
     context.go(RouteGuard.afterAuth(auth.currentUser!));
   }

@@ -6,8 +6,7 @@ import '../../../../core/utils/app_date_utils.dart';
 import '../../../appointments/domain/entities/appointment_status.dart';
 import '../../domain/staff_home_summary.dart';
 
-/// Khu vực "Tổng quan hôm nay" với 4 thẻ chỉ số. Các con số lấy từ [StaffHomeSummary]
-/// (tính từ danh sách lịch hẹn chung), widget này không tự đếm hay cộng trừ.
+/// Khu vực "Tổng quan hôm nay" với 4 thẻ chỉ số.
 class TodayOverviewCard extends StatelessWidget {
   const TodayOverviewCard({
     super.key,
@@ -37,7 +36,6 @@ class TodayOverviewCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // FittedBox: tự thu nhỏ chữ trên màn hình hẹp thay vì cắt bằng dấu "…".
                   const FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
@@ -159,7 +157,7 @@ class TodayOverviewCard extends StatelessWidget {
   }
 }
 
-/// Một thẻ chỉ số: icon, con số, nhãn. Bấm vào mở Lịch đặt lọc đúng nhóm lịch đó.
+/// Một thẻ chỉ số.
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.name,
@@ -189,9 +187,6 @@ class _StatCard extends StatelessWidget {
         child: InkWell(
           key: ValueKey('stat_card_$name'),
           onTap: onTap,
-          // Dạng gọn: số lớn + icon nhỏ ở hàng trên, nhãn chiếm trọn bề ngang ở hàng dưới
-          // (nhãn dài như "Lịch hẹn hôm nay" vẫn nằm trên một dòng ở màn hình 360dp).
-          // Nhờ thấp hơn, thẻ cần xử lý + 4 chỉ số vừa một màn hình mà không phải cuộn.
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 12, 12),
             child: Column(
@@ -229,8 +224,7 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-/// Thanh tỉ lệ mảnh: phần cam / xanh lá / đỏ ứng với Chờ xác nhận / Đã xác nhận /
-/// Đã hủy – Từ chối của hôm nay. Cùng màu với 3 thẻ chỉ số bên dưới, nên nhìn là hiểu.
+/// Thanh tỉ lệ mảnh.
 class _StatusBar extends StatelessWidget {
   const _StatusBar({required this.summary});
 
@@ -249,7 +243,6 @@ class _StatusBar extends StatelessWidget {
       child: SizedBox(
         height: 8,
         child: Row(
-          // stretch: các ô màu (không có nội dung bên trong) lấp đủ chiều cao 8.
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (var i = 0; i < parts.length; i++) ...[

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_strings.dart';
 
-/// Ô mật khẩu có nút con mắt. Mỗi instance tự giữ trạng thái ẩn/hiện riêng
-/// nên các ô Mật khẩu / Xác nhận mật khẩu không ảnh hưởng lẫn nhau (Mục 4.3).
+/// Ô mật khẩu có nút con mắt.
 class PasswordField extends StatefulWidget {
   const PasswordField({
     super.key,
@@ -28,7 +27,6 @@ class PasswordField extends StatefulWidget {
   final AutovalidateMode? autovalidateMode;
 
   /// Gợi ý cho trình quản lý mật khẩu của điện thoại (VD [AutofillHints.password]).
-  /// `null` = không gợi ý (các màn khác giữ nguyên hành vi cũ).
   final Iterable<String>? autofillHints;
 
   @override

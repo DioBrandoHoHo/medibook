@@ -19,12 +19,7 @@ import '../controllers/busy_slots_controller.dart';
 import '../controllers/doctors_controller.dart';
 import '../widgets/doctor_card.dart';
 
-/// Màn "Thông tin bác sĩ" (dat_lich.txt mục 5–6): thông tin bác sĩ, lịch còn trống theo
-/// ngày + buổi, chọn một khung và đặt lịch.
-///
-/// Màn này KHÔNG giữ bản sao dữ liệu: bác sĩ đọc theo id từ `DoctorsController`, trạng thái
-/// khung tính bằng [buildBookSlots] từ `BusySlotsController` + lịch hẹn của chính khách.
-/// Có người khác đặt mất khung đang chọn thì khung đổi màu và lựa chọn tự bỏ.
+/// Màn "Thông tin bác sĩ".
 class DoctorDetailScreen extends StatefulWidget {
   const DoctorDetailScreen({
     super.key,
@@ -36,7 +31,7 @@ class DoctorDetailScreen extends StatefulWidget {
 
   final String doctorId;
 
-  /// Mở tab Lịch hẹn (nút "Xem lịch hẹn" trên thông báo đặt thành công). `null` = không hiện nút.
+  /// Mở tab Lịch hẹn.
   final VoidCallback? onViewAppointments;
 
   /// Ngày mở sẵn (mặc định hôm nay).
@@ -51,8 +46,6 @@ class DoctorDetailScreen extends StatefulWidget {
     DateTime? day,
     int? slotMinutes,
   }) {
-    // Mở từ trong khu vực Customer (Trang chủ / Đặt lịch) thì có điều hướng tab; mở từ màn
-    // được đẩy lên trên (VD Chi tiết lịch hẹn) thì không có -> không hiện nút "Xem lịch hẹn".
     final nav = context.read<CustomerNavController?>();
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -99,7 +92,7 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
 
   void _selectDay(DateTime day) => setState(() {
     _day = day;
-    _shift = null; // sang ngày khác -> về buổi mặc định của ngày đó
+    _shift = null;
     _selected = null;
   });
 
@@ -148,7 +141,6 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
       mine: mine,
       now: now,
     );
-    // Khung đang chọn không còn trống (người khác vừa đặt / đã tới giờ) -> coi như chưa chọn.
     final selected = _selected != null && freeInDay.contains(_selected)
         ? _selected
         : null;
@@ -207,7 +199,6 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
             today: today,
             selected: day,
             lastDay: BookingWindow.lastDay(now),
-            // Ngày không còn khung trống nào của bác sĩ này (kín lịch / hết giờ) -> mờ.
             isEnabled: (d) => freeSlotStarts(
               doctorId: doctor.id,
               day: d,
@@ -309,7 +300,6 @@ class _DoctorDetailScreenState extends State<DoctorDetailScreen> {
     );
     if (agreed != true || !mounted) return;
 
-    // Kiểm tra lại theo dữ liệu MỚI NHẤT (trong lúc xem bảng xác nhận có thể đã có người đặt).
     final problem = checkBooking(
       doctorId: doctor.id,
       start: start,
@@ -384,7 +374,7 @@ class _Heading extends StatelessWidget {
   );
 }
 
-/// Thẻ nền xanh: chữ cái đại diện, họ tên, chuyên khoa, phòng, kinh nghiệm, phí khám.
+/// Thẻ nền xanh.
 class _DoctorHeader extends StatelessWidget {
   const _DoctorHeader({required this.doctor});
 
@@ -661,7 +651,6 @@ class _SlotCell extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: border, width: selected ? 1.6 : 1),
           ),
-          // Co chữ lại nếu ô hẹp (màn nhỏ / cỡ chữ hệ thống lớn) thay vì tràn.
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Column(
@@ -733,7 +722,7 @@ class _Legend extends StatelessWidget {
   }
 }
 
-/// Thanh dưới cùng: khung đang chọn + nút Đặt lịch.
+/// Thanh dưới cùng.
 class _BookBar extends StatelessWidget {
   const _BookBar({
     required this.selected,
@@ -821,8 +810,7 @@ class _BookBar extends StatelessWidget {
   }
 }
 
-/// Bảng xác nhận trước khi đặt: bác sĩ, dịch vụ, ngày giờ, phòng, người khám.
-/// Người khám lấy từ hồ sơ đang đăng nhập (cùng dữ liệu với tab Cá nhân).
+/// Bảng xác nhận trước khi đặt.
 class _ConfirmSheet extends StatelessWidget {
   const _ConfirmSheet({
     required this.doctor,

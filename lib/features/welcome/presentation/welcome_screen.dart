@@ -8,8 +8,7 @@ import '../../../core/theme/app_colors.dart';
 import 'widgets/doctor_hero_image.dart';
 import 'widgets/welcome_background_painter.dart';
 
-/// Màn hình chào mừng (Mục 2): ảnh bác sĩ, tagline, nút "Bắt đầu đặt lịch".
-/// Hiệu ứng: ảnh phóng nhẹ + mờ dần, chữ và nút trượt lên lần lượt.
+/// Màn hình chào mừng.
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -89,7 +88,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
                             ),
                           ),
                           const SizedBox(height: 10),
-                          // Tagline tự thu nhỏ trên màn hình thấp để không bị tràn.
                           Expanded(
                             child: _SlideUp(
                               animation: _interval(0.4, 0.8),
@@ -121,7 +119,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
   }
 }
 
-/// Tagline giữ nguyên văn đặc tả; chữ "anywhere." tô xanh như ảnh mẫu.
+/// Tagline.
 class _Tagline extends StatelessWidget {
   const _Tagline();
 

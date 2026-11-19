@@ -16,12 +16,7 @@ import '../../../appointments/presentation/widgets/appointment_tile.dart';
 import '../../../appointments/presentation/widgets/status_chip.dart';
 import '../widgets/status_filter_sheet.dart';
 
-/// Màn Lịch đặt của Staff (lich_dat.txt).
-///
-/// Màn này KHÔNG giữ danh sách lịch riêng: mỗi lần dựng lại, nó lấy danh sách từ
-/// [AppointmentsController] (cùng nguồn với Tổng quan và Chi tiết) rồi lọc bằng
-/// [applyBookingFilter]. Điều kiện lọc nằm ở [StaffNavController] để Tổng quan có thể
-/// mở màn này với bộ lọc chọn sẵn.
+/// Màn Lịch đặt của Staff.
 class StaffBookingsScreen extends StatefulWidget {
   const StaffBookingsScreen({super.key});
 
@@ -41,11 +36,11 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
   late final StaffNavController _nav;
   bool _searchOpen = false;
 
-  /// Cuộn của danh sách thường và của danh sách "Tất cả" mở ở mốc hôm nay (vị trí 0 = mốc).
+  /// Cuộn của danh sách.
   final _listScroll = ScrollController();
   final _allScroll = ScrollController();
 
-  /// Đã cuộn xa khỏi mốc hôm nay ở "Tất cả" -> hiện nút "Hôm nay" để quay lại.
+  /// Đã cuộn xa khỏi mốc hôm nay ở "Tất cả".
   bool _farFromToday = false;
   late int _lastOpenRequest;
 
@@ -57,12 +52,10 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
   }
 
   void _onNavChanged() {
-    // Từ khoá bị xoá từ bên ngoài (VD Tổng quan mở màn này với bộ lọc mới) -> đóng ô tìm kiếm.
     if (_nav.query.isEmpty && _search.text.isNotEmpty) {
       _search.clear();
       setState(() => _searchOpen = false);
     }
-    // Tổng quan vừa mở màn này -> về vị trí mở đầu, không giữ chỗ cuộn của lần trước.
     if (_nav.openRequest != _lastOpenRequest) {
       _lastOpenRequest = _nav.openRequest;
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToStart(animate: false));
@@ -86,7 +79,7 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
     return false;
   }
 
-  /// Kéo xuống để làm mới: dữ liệu vốn tự cập nhật; thao tác này tính lại theo giờ hiện tại.
+  /// Kéo xuống để làm mới.
   Future<void> _refresh() async {
     context.read<AppointmentsController>().refreshClock();
     await Future<void>.delayed(const Duration(milliseconds: 400));
@@ -115,8 +108,6 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
 
   Future<void> _openStatusFilter() async {
     final appointments = context.read<AppointmentsController>();
-    // Số lịch của từng trạng thái trong bộ lọc chính + từ khoá đang dùng. Đang ở "Chờ xác nhận"
-    // thì đếm theo "Tất cả", vì chọn trạng thái ở đó sẽ tự chuyển sang "Tất cả" (setStatuses).
     final base = _nav.filter == BookingFilter.pending ? BookingFilter.all : _nav.filter;
     final counts = countByStatus(
       applyBookingFilter(appointments.items, base, appointments.now, query: _nav.query),
@@ -127,7 +118,7 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
 
   void _clearExtraFilters() {
     _nav.setStatuses(const {});
-    _nav.setQuery(''); // _onNavChanged sẽ xoá chữ trong ô tìm kiếm
+    _nav.setQuery('');
   }
 
   @override
@@ -149,7 +140,6 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
               label: const Text(AppStrings.backToToday),
             )
           : null,
-      // Nền sáng -> icon thanh trạng thái màu tối (Tổng quan dùng màu sáng trên nền xanh).
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark,
         child: SafeArea(
@@ -204,7 +194,6 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
                   Icons.filter_alt_outlined,
                   color: nav.statuses.isEmpty ? AppColors.textPrimary : AppColors.primary,
                 ),
-                // Chấm xanh báo đang có lọc trạng thái.
                 if (nav.statuses.isNotEmpty)
                   Positioned(
                     right: -1,
@@ -242,7 +231,7 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
         textInputAction: TextInputAction.search,
         onChanged: (value) {
           _nav.setQuery(value);
-          setState(() {}); // hiện / ẩn nút xoá chữ
+          setState(() {});
         },
         decoration: InputDecoration(
           hintText: AppStrings.searchHint,
@@ -269,10 +258,9 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
     );
   }
 
-  /// Ba bộ lọc chính, kèm số lịch của từng bộ lọc (đếm từ cùng danh sách đang hiển thị).
+  /// Ba bộ lọc chính, kèm số lịch của từng bộ lọc.
   Widget _buildFilterBar(StaffNavController nav, AppointmentsController appointments, bool ready) {
     return SingleChildScrollView(
-      // Cuộn ngang để không tràn trên màn hình hẹp / cỡ chữ lớn.
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.fromLTRB(16, 6, 8, 10),
       child: Row(
@@ -378,7 +366,6 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
         );
 
         if (split <= 0) {
-          // Không có lịch cũ hơn hôm nay, hoặc mọi lịch đều đã qua -> danh sách thường.
           final rows = rowsOf(groups);
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -402,8 +389,6 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
           );
         }
 
-        // Sliver phía trước `center` mọc NGƯỢC lên trên: phần tử 0 nằm sát mốc hôm nay,
-        // nên đảo thứ tự để tiêu đề ngày vẫn nằm trên các lịch của ngày đó.
         final pastRows = rowsOf(groups.take(split)).reversed.toList();
         final pastCount = groups.take(split).fold<int>(0, (n, g) => n + g.items.length);
         final futureRows = rowsOf(groups.skip(split));
@@ -444,10 +429,7 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
     }
   }
 
-  /// "Tất cả" chứa cả lịch cũ (sắp từ cũ tới mới). Để không phải cuộn qua hàng trăm lịch đã qua,
-  /// danh sách MỞ SẴN ở hôm nay (hoặc ngày gần nhất phía sau); lịch trước hôm nay vẫn còn nguyên,
-  /// nằm phía trên – kéo xuống là thấy. Đang tìm kiếm thì hiện danh sách thường để không che kết quả.
-  /// Trả về chỉ số nhóm ngày đầu tiên từ hôm nay; <= 0 nghĩa là dùng danh sách thường.
+  /// Danh sách "Tất cả".
   static int _todaySplit(List<BookingDayGroup> groups, StaffNavController nav, DateTime now) {
     if (nav.filter != BookingFilter.all || nav.query.trim().isNotEmpty) return -1;
     return groups.indexWhere((g) => !g.day.isBefore(AppDateUtils.dayOnly(now)));
@@ -496,7 +478,7 @@ class _StaffBookingsScreenState extends State<StaffBookingsScreen> {
   }
 }
 
-/// Nút lọc dạng viên thuốc. Đang chọn = nền xanh, chữ trắng.
+/// Nút lọc dạng viên thuốc.
 class _FilterPill extends StatelessWidget {
   const _FilterPill({
     required this.filter,
@@ -519,7 +501,6 @@ class _FilterPill extends StatelessWidget {
       key: ValueKey('filter_${filter.name}'),
       selected: selected,
       onSelected: (_) => onSelected(),
-      // Không dùng dấu tích để cả ba nút vừa một hàng trên màn hình 360dp.
       showCheckmark: false,
       selectedColor: AppColors.primary,
       backgroundColor: Colors.white,
@@ -560,7 +541,7 @@ class _FilterPill extends StatelessWidget {
   }
 }
 
-/// Dòng nhỏ ở đầu phần "từ hôm nay" của bộ lọc Tất cả: nhắc rằng lịch cũ hơn nằm phía trên.
+/// Dòng nhỏ ở đầu phần "từ hôm nay" của bộ lọc Tất cả.
 class _EarlierHint extends StatelessWidget {
   const _EarlierHint({required this.count});
 
@@ -636,9 +617,7 @@ class _DayHeader extends StatelessWidget {
   }
 }
 
-/// Thẻ lịch hẹn ở màn Lịch đặt: thông tin (có tên bác sĩ; giờ không lặp lại ngày vì đã có
-/// tiêu đề ngày) + nút Xác nhận / Từ chối nhanh với lịch đang chờ. Lịch đã xử lý không có nút
-/// (bấm cả thẻ để mở Chi tiết) nên thẻ gọn hơn, xem được nhiều lịch hơn trên một màn hình.
+/// Thẻ lịch hẹn ở màn Lịch đặt.
 class _BookingCard extends StatefulWidget {
   const _BookingCard({super.key, required this.appointment, required this.now});
 
@@ -655,7 +634,6 @@ class _BookingCardState extends State<_BookingCard> {
   Future<void> _handle({required bool confirm}) async {
     setState(() => _busy = true);
     await runAppointmentAction(context, widget.appointment, confirm: confirm);
-    // Thẻ có thể đã biến mất khỏi danh sách (VD đang lọc Chờ xác nhận).
     if (mounted) setState(() => _busy = false);
   }
 

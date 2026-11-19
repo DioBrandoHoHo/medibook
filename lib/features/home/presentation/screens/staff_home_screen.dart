@@ -17,10 +17,7 @@ import '../widgets/staff_home_header.dart';
 import '../widgets/today_overview_card.dart';
 import '../widgets/upcoming_list.dart';
 
-/// Trang chủ Staff (tab "Tổng quan") – đặc tả trang_chu.txt.
-///
-/// Màn hình KHÔNG giữ số liệu nào: mỗi lần dựng lại, nó lấy danh sách lịch hẹn
-/// từ [AppointmentsController] rồi tính [StaffHomeSummary] từ danh sách đó.
+/// Trang chủ Staff.
 class StaffHomeScreen extends StatelessWidget {
   const StaffHomeScreen({super.key});
 
@@ -33,18 +30,14 @@ class StaffHomeScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      // Phần đầu nền xanh tràn lên thanh trạng thái -> dùng icon trạng thái màu sáng.
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        // Kéo xuống để làm mới: dữ liệu vốn tự cập nhật theo thời gian thực, nên thao tác này
-        // tính lại theo giờ hiện tại; nếu đang lỗi thì kết nối lại.
         child: RefreshIndicator(
           key: const ValueKey('home_refresh'),
           color: AppColors.primary,
           onRefresh: () => _refresh(appointments),
           child: ListView(
             padding: EdgeInsets.zero,
-            // Luôn kéo được kể cả khi nội dung ngắn hơn màn hình.
             physics: const AlwaysScrollableScrollPhysics(),
             children: [
               StaffHomeHeader(
@@ -74,11 +67,10 @@ class StaffHomeScreen extends StatelessWidget {
     } else {
       appointments.refreshClock();
     }
-    // Giữ vòng xoay một nhịp ngắn để người dùng thấy thao tác đã được nhận.
     await Future<void>.delayed(const Duration(milliseconds: 400));
   }
 
-  /// Phần thân theo 3 trạng thái: đang tải / lỗi (có Thử lại) / có dữ liệu.
+  /// Phần thân theo 3 trạng thái.
   List<Widget> _buildBody(AppointmentsController appointments, StaffNavController nav) {
     switch (appointments.status) {
       case LoadStatus.loading:
@@ -91,10 +83,7 @@ class StaffHomeScreen extends StatelessWidget {
           ),
         ];
       case LoadStatus.ready:
-        // Toàn bộ số liệu được tính tại đây từ MỘT danh sách lịch hẹn.
         final summary = StaffHomeSummary.from(appointments.items, appointments.now);
-        // Thứ bậc: việc CẦN LÀM (lịch chờ xử lý) lên đầu để luôn thấy ngay khi mở app,
-        // tiếp theo là số liệu hôm nay, cuối cùng là các lịch sắp diễn ra.
         return [
           PendingNoticeCard(
             summary: summary,
@@ -105,14 +94,12 @@ class StaffHomeScreen extends StatelessWidget {
           TodayOverviewCard(
             summary: summary,
             today: appointments.now,
-            // Bấm "Xem chi tiết" hoặc một thẻ chỉ số -> Lịch đặt lọc Hôm nay (+ trạng thái).
             onOpenToday: (statuses) => nav.openBookings(BookingFilter.today, statuses: statuses),
           ),
           const SizedBox(height: 16),
           UpcomingList(
             upcoming: summary.upcoming,
             now: appointments.now,
-            // "Tất cả" mở sẵn ở vị trí hôm nay (lịch cũ hơn nằm phía trên) – xem StaffBookingsScreen.
             onSeeAll: () => nav.openBookings(BookingFilter.all),
           ),
         ];

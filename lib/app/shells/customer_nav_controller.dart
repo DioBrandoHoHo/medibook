@@ -3,9 +3,6 @@ import 'package:flutter/foundation.dart';
 import '../../features/appointments/domain/customer_appointments.dart';
 
 /// Tab đang chọn của khu vực Customer + điều kiện lọc của tab Đặt lịch.
-/// Nhờ đó Trang chủ có thể "chuyển sang tab Đặt lịch và lọc sẵn chuyên khoa".
-///
-/// Controller này CHỈ giữ trạng thái giao diện, không giữ bác sĩ hay lịch hẹn.
 class CustomerNavController extends ChangeNotifier {
   static const homeTab = 0;
   static const bookingTab = 1;
@@ -61,7 +58,7 @@ class CustomerNavController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Mở tab Đặt lịch; truyền [specialty] để lọc sẵn chuyên khoa (xoá các điều kiện cũ).
+  /// Mở tab Đặt lịch.
   void openBooking({String? specialty}) {
     if (specialty != null) {
       _specialty = specialty;

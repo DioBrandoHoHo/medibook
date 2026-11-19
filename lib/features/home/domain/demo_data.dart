@@ -4,10 +4,7 @@ import '../../appointments/domain/entities/appointment_status.dart';
 import '../../booking/domain/entities/doctor.dart';
 import '../../notifications/domain/entities/app_notification.dart';
 
-/// Bộ dữ liệu mẫu tính theo thời điểm [DemoData.build] được gọi – dùng cho bản xem thử không
-/// Firebase (`test/demo/main_demo.dart`) và test. Dữ liệu trên Firebase thật được ghi một lần
-/// bằng `tool/seed_firestore.dart` (nút "Tạo lại dữ liệu mẫu" trong app đã bỏ ngày 17/11/2026).
-/// - Mọi bản ghi có `isDemo = true` và id cố định dạng `demo_xx`.
+/// Bộ dữ liệu mẫu tính theo thời điểm [DemoData.build] được gọi.
 class DemoData {
   const DemoData({
     required this.appointments,
@@ -21,7 +18,7 @@ class DemoData {
 
   static const demoCustomerId = 'demo';
 
-  /// 5 bác sĩ mẫu – dùng chung cho tab Lịch làm việc (Staff) và phần Đặt lịch (Customer).
+  /// 5 bác sĩ mẫu.
   static const demoDoctors = <Doctor>[
     Doctor(
       id: 'demo_d01',
@@ -77,17 +74,13 @@ class DemoData {
   ];
 
   factory DemoData.build(DateTime now) {
-    // Mốc: nửa giờ kế tiếp sau thời điểm hiện tại (VD 10:10 -> 10:30, 10:40 -> 11:00).
     final base = DateTime(now.year, now.month, now.day, now.hour, now.minute < 30 ? 30 : 60);
     final today = DateTime(now.year, now.month, now.day);
     DateTime day(int offset, int hour, int minute) =>
         DateTime(today.year, today.month, today.day + offset, hour, minute);
     DateTime fromBase(int minutes) => base.add(Duration(minutes: minutes));
 
-    // (giờ bắt đầu, tên khách, dịch vụ, trạng thái)
-    // 15 dòng đầu giữ nguyên thứ tự (id demo_01..demo_15 đã được dùng từ trước).
     final rows = <(DateTime, String, String, AppointmentStatus)>[
-      // Quanh thời điểm hiện tại (phần lớn rơi vào hôm nay)
       (fromBase(-180), 'Lê Văn Hùng', 'Khám tai mũi họng', AppointmentStatus.confirmed),
       (fromBase(-120), 'Đỗ Thị Lan', 'Khám mắt', AppointmentStatus.cancelled),
       (fromBase(-60), 'Vũ Minh Quân', 'Khám nội tổng quát', AppointmentStatus.confirmed),
@@ -106,8 +99,6 @@ class DemoData {
       // Hôm qua
       (day(-1, 15, 0), 'Dương Thị Yến', 'Khám mắt', AppointmentStatus.confirmed),
       (day(-1, 16, 0), 'Mai Xuân Trường', 'Khám tai mũi họng', AppointmentStatus.rejected),
-      // Lịch cố định TRONG giờ làm việc để tab Lịch làm việc luôn có dữ liệu,
-      // bất kể bấm tạo vào lúc nào trong ngày.
       (day(0, 8, 0), 'Tạ Quang Vinh', 'Khám nội tổng quát', AppointmentStatus.confirmed),
       (day(0, 9, 0), 'Lương Thị Ngọc', 'Khám da liễu', AppointmentStatus.confirmed),
       (day(0, 14, 0), 'Châu Minh Khoa', 'Khám tai mũi họng', AppointmentStatus.confirmed),
@@ -120,8 +111,6 @@ class DemoData {
       (day(2, 15, 0), 'La Thị Diệu', 'Khám nhi', AppointmentStatus.pending),
     ];
 
-    // Gắn bác sĩ cho từng lịch. Hai lịch còn hiệu lực của cùng bác sĩ không được trùng giờ:
-    // thử lần lượt các bác sĩ, bắt đầu từ bác sĩ "ưu tiên" theo thứ tự dòng.
     final busy = <String, List<(DateTime, DateTime)>>{for (final d in demoDoctors) d.id: []};
     Doctor doctorFor(int index, DateTime start, DateTime end, bool occupies) {
       for (var k = 0; k < demoDoctors.length; k++) {
@@ -158,7 +147,7 @@ class DemoData {
       );
     }
 
-    // Thông báo mẫu: mỗi lịch đang chờ có 1 thông báo CHƯA đọc; thêm 1 thông báo đã đọc.
+    // Thông báo mẫu
     final pending = appointments.where((a) => a.isPending).toList();
     final notifications = <AppNotification>[
       for (var i = 0; i < pending.length; i++)

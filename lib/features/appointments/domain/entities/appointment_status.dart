@@ -1,2 +1,2 @@
-/// Trạng thái lịch hẹn (theo đặc tả tổng quan).
+/// Trạng thái lịch hẹn.
 enum AppointmentStatus { pending, confirmed, rejected, cancelled }

@@ -1,4 +1,4 @@
-/// Tiện ích ngày giờ (tự viết, không cần thêm thư viện).
+/// Tiện ích ngày giờ.
 abstract final class AppDateUtils {
   static bool isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
@@ -24,10 +24,8 @@ abstract final class AppDateUtils {
   /// VD: Chủ nhật, 15/11/2026
   static String weekdayDate(DateTime d) => '${_weekdays[d.weekday - 1]}, ${date(d)}';
 
-  /// Tiêu đề ngày trong danh sách: "Hôm nay, 15/11/2026", "Ngày mai, …", "Hôm qua, …",
-  /// các ngày khác hiện thứ trong tuần.
+  /// Tiêu đề ngày trong danh sách.
   static String dayLabel(DateTime d, DateTime now) {
-    // Làm tròn để không lệch khi một ngày dài 23/25 giờ (đổi giờ mùa hè).
     final days = (dayOnly(d).difference(dayOnly(now)).inHours / 24).round();
     return switch (days) {
       0 => 'Hôm nay, ${date(d)}',
@@ -37,8 +35,7 @@ abstract final class AppDateUtils {
     };
   }
 
-  /// Nhãn ngày gọn cho thẻ: "Hôm nay", "Ngày mai", "Hôm qua", các ngày khác "T5, 19/11"
-  /// (khác năm hiện tại thì thêm năm: "T2, 04/01/2027").
+  /// Nhãn ngày gọn cho thẻ.
   static String shortDayLabel(DateTime d, DateTime now) {
     return switch (daysBetween(now, d)) {
       0 => 'Hôm nay',
@@ -51,11 +48,9 @@ abstract final class AppDateUtils {
     };
   }
 
-  /// Thời gian còn lại tới [start] khi lịch thuộc HÔM NAY và chưa bắt đầu:
-  /// "còn 25 phút", "còn 2 giờ", "còn 1 giờ 30 phút". Ngày khác / đã bắt đầu -> `null`.
+  /// Thời gian còn lại tới [start] khi lịch thuộc HÔM NAY và chưa bắt đầu.
   static String? startsIn(DateTime start, DateTime now) {
     if (!isSameDay(start, now) || !start.isAfter(now)) return null;
-    // Làm tròn LÊN theo phút: còn 30 giây vẫn hiện "còn 1 phút", không bao giờ "còn 0 phút".
     final minutes = (start.difference(now).inSeconds / 60).ceil();
     if (minutes < 60) return 'còn $minutes phút';
     final h = minutes ~/ 60;
@@ -63,17 +58,17 @@ abstract final class AppDateUtils {
     return m == 0 ? 'còn $h giờ' : 'còn $h giờ $m phút';
   }
 
-  /// Số ngày lịch từ [from] tới [to] (âm nếu [to] trước [from]); bỏ qua giờ phút.
+  /// Số ngày lịch từ [from] tới [to].
   static int daysBetween(DateTime from, DateTime to) =>
       (dayOnly(to).difference(dayOnly(from)).inHours / 24).round();
 
-  /// [d] cộng thêm [days] ngày lịch (00:00). Tự sang tháng / năm, đúng cả năm nhuận.
+  /// [d] cộng thêm [days] ngày lịch.
   static DateTime addDays(DateTime d, int days) => DateTime(d.year, d.month, d.day + days);
 
   /// Ngày 1 của tháng chứa [d].
   static DateTime monthStart(DateTime d) => DateTime(d.year, d.month);
 
-  /// Ngày 1 của tháng cách tháng chứa [d] đúng [months] tháng (âm = lùi). Tự sang năm.
+  /// Ngày 1 của tháng cách tháng chứa [d] đúng [months] tháng.
   static DateTime addMonths(DateTime d, int months) => DateTime(d.year, d.month + months);
 
   /// Số ngày của tháng chứa [d] (28–31).
@@ -81,8 +76,7 @@ abstract final class AppDateUtils {
 
   static bool isSameMonth(DateTime a, DateTime b) => a.year == b.year && a.month == b.month;
 
-  /// Các ô của bảng lịch tháng chứa [month], tuần bắt đầu từ Thứ Hai: `null` cho ô trống
-  /// trước ngày 1 và sau ngày cuối tháng. Độ dài luôn là bội số của 7.
+  /// Các ô của bảng lịch tháng chứa [month], tuần bắt đầu từ Thứ Hai.
   static List<DateTime?> monthCells(DateTime month) {
     final first = monthStart(month);
     final cells = <DateTime?>[
@@ -109,11 +103,11 @@ abstract final class AppDateUtils {
   /// VD: 14/11/2026
   static String date(DateTime d) => '${_two(d.day)}/${_two(d.month)}/${d.year}';
 
-  /// Ngày dạng lưu trữ `yyyy-MM-dd` (VD ngày sinh). Không phụ thuộc múi giờ.
+  /// Ngày dạng lưu trữ `yyyy-MM-dd`.
   static String isoDate(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${_two(d.month)}-${_two(d.day)}';
 
-  /// Đọc `yyyy-MM-dd`. Sai định dạng / không phải ngày có thật / không phải chuỗi -> `null`.
+  /// Đọc `yyyy-MM-dd`.
   static DateTime? parseIsoDate(Object? value) {
     if (value is! String) return null;
     final m = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(value);
@@ -121,14 +115,14 @@ abstract final class AppDateUtils {
     return _realDate(int.parse(m[1]!), int.parse(m[2]!), int.parse(m[3]!));
   }
 
-  /// Đọc ngày người dùng gõ dạng `dd/mm/yyyy` (chấp nhận 1/2/2000). Không hợp lệ -> `null`.
+  /// Đọc ngày người dùng gõ dạng `dd/mm/yyyy`.
   static DateTime? parseDisplayDate(String input) {
     final m = RegExp(r'^(\d{1,2})/(\d{1,2})/(\d{4})$').firstMatch(input.trim());
     if (m == null) return null;
     return _realDate(int.parse(m[3]!), int.parse(m[2]!), int.parse(m[1]!));
   }
 
-  /// `null` nếu ngày không tồn tại (VD 31/02) – DateTime tự "tràn" sang tháng sau nên phải so lại.
+  /// `null` nếu ngày không tồn tại (VD 31/02).
   static DateTime? _realDate(int year, int month, int day) {
     final d = DateTime(year, month, day);
     return d.year == year && d.month == month && d.day == day ? d : null;

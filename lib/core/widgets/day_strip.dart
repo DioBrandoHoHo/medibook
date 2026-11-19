@@ -4,11 +4,7 @@ import '../constants/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_date_utils.dart';
 
-/// Dải chọn ngày: [dayCount] ngày kể từ hôm nay, cuộn ngang.
-/// Dùng chung cho tab Lịch làm việc (Staff) và phần Đặt lịch (Customer).
-///
-/// Khi ngày đang chọn đổi từ bên ngoài (VD chuyển tháng, chọn trên bảng lịch tháng) dải tự
-/// cuộn để ngày đó nằm trong vùng nhìn.
+/// Dải chọn ngày.
 class DayStrip extends StatefulWidget {
   const DayStrip({
     super.key,
@@ -27,8 +23,7 @@ class DayStrip extends StatefulWidget {
   final int dayCount;
   final EdgeInsets padding;
 
-  /// Ngày nào chọn được. `null` = mọi ngày trong dải. Ngày không chọn được hiện mờ và
-  /// không bấm được (ngày ĐANG chọn vẫn hiện là đang chọn).
+  /// Ngày nào chọn được.
   final bool Function(DateTime day)? isEnabled;
 
   /// Hiện thêm dòng tháng dưới số ngày (dùng khi dải dài qua nhiều tháng).
@@ -50,7 +45,6 @@ class _DayStripState extends State<DayStrip> {
   @override
   void initState() {
     super.initState();
-    // Mở màn với ngày chọn sẵn ở xa -> bắt đầu cuộn gần ngày đó (để lại 1 ô phía trước).
     final offset = (_selectedIndex - 1) * (DayStrip._cellWidth + DayStrip._gap);
     _scroll = ScrollController(initialScrollOffset: offset < 0 ? 0 : offset);
   }
@@ -129,7 +123,6 @@ class _DayStripState extends State<DayStrip> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: isSelected ? AppColors.primary : AppColors.border),
                 ),
-                // Cỡ chữ hệ thống lớn -> co nội dung lại thay vì tràn ô.
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Column(

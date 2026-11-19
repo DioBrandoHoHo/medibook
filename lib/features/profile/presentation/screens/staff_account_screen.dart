@@ -20,11 +20,7 @@ import '../widgets/user_avatar.dart';
 import 'change_password_screen.dart';
 import 'recovery_email_screen.dart';
 
-/// Tab "Tài khoản" của Staff (thong_tin.txt).
-///
-/// Màn này KHÔNG giữ bản sao hồ sơ: mọi thông tin đọc từ `AuthController.currentUser`
-/// – cùng đối tượng được nạp từ document `users/{uid}` tạo lúc đăng ký. Vì vậy thông tin
-/// lúc tạo tài khoản, ở đây và ở lời chào Trang tổng quan luôn là một.
+/// Tab "Tài khoản" của Staff.
 class StaffAccountScreen extends StatelessWidget {
   const StaffAccountScreen({super.key});
 
@@ -39,9 +35,7 @@ class StaffAccountScreen extends StatelessWidget {
       const AccountView(title: AppStrings.accountTitle, roleLabel: AppStrings.roleStaff);
 }
 
-/// Bố cục trang thông tin tài khoản, dùng chung cho tab "Tài khoản" của Staff và tab
-/// "Cá nhân" của Customer (thong_tin.txt phần 1 + 2). Hai vai trò chỉ khác tiêu đề,
-/// nhãn vai trò và khối [extra] chèn giữa thẻ tài khoản và thẻ thông tin cá nhân.
+/// Bố cục trang thông tin tài khoản (dùng chung Staff và Customer).
 class AccountView extends StatefulWidget {
   const AccountView({super.key, required this.title, required this.roleLabel, this.extra});
 
@@ -54,10 +48,10 @@ class AccountView extends StatefulWidget {
 }
 
 class _AccountViewState extends State<AccountView> {
-  /// Dùng lại ProfileController (cùng luồng lưu với màn Cập nhật thông tin) để lưu ảnh đại diện.
+  /// Lưu ảnh đại diện.
   late final ProfileController _profile;
 
-  /// Đang xử lý / lưu ảnh -> vòng xoay trên ảnh, chặn bấm lần hai.
+  /// Đang xử lý / lưu ảnh.
   final _avatarBusy = ValueNotifier<bool>(false);
 
   @override
@@ -86,10 +80,8 @@ class _AccountViewState extends State<AccountView> {
         child: SafeArea(
           bottom: false,
           child: user == null
-              ? const SizedBox.shrink() // đang đăng xuất, router sắp chuyển trang
+              ? const SizedBox.shrink()
               : ListView(
-                  // Trang ngắn (vài thẻ) -> dựng sẵn cả trang, kể cả phần dưới mép màn hình
-                  // (thẻ Bảo mật / Đăng xuất) để cuộn mượt và luôn tìm thấy khi cần.
                   scrollCacheExtent: const ScrollCacheExtent.pixels(2000),
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
                   children: [
@@ -131,7 +123,7 @@ class _AccountViewState extends State<AccountView> {
   }
 }
 
-/// Thẻ tài khoản nền xanh: ảnh đại diện, họ tên, vai trò, số điện thoại.
+/// Thẻ tài khoản nền xanh.
 class _AccountCard extends StatelessWidget {
   const _AccountCard({
     required this.user,
@@ -246,8 +238,7 @@ class _AccountCard extends StatelessWidget {
   }
 }
 
-/// Ảnh đại diện bấm được để đổi ảnh: biểu tượng máy ảnh nhỏ ở góc gợi ý thao tác,
-/// vòng xoay phủ lên khi đang xử lý / lưu.
+/// Ảnh đại diện bấm được để đổi ảnh.
 class _EditableAvatar extends StatelessWidget {
   const _EditableAvatar({required this.user, required this.busy, required this.onTap});
 
@@ -399,7 +390,7 @@ class _Section extends StatelessWidget {
   }
 }
 
-/// Thẻ "Thông tin cá nhân": các dòng chỉ đọc + nút Chỉnh sửa.
+/// Thẻ "Thông tin cá nhân".
 class _InfoCard extends StatelessWidget {
   const _InfoCard({required this.user, required this.onEdit});
 
@@ -510,7 +501,6 @@ class _InfoRow extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              // Chưa có dữ liệu -> "Chưa cập nhật", không để trống.
               missing ? AppStrings.notUpdated : value,
               key: ValueKey('info_$name'),
               textAlign: TextAlign.right,
@@ -527,7 +517,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-/// Thẻ "Bảo mật": Đổi mật khẩu + Đăng xuất.
+/// Thẻ "Bảo mật".
 class _SecurityCard extends StatelessWidget {
   const _SecurityCard({
     required this.onChangePassword,

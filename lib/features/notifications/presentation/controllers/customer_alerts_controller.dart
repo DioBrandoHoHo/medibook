@@ -8,15 +8,7 @@ import '../../data/alert_store.dart';
 import '../../data/local_notifications.dart';
 import '../../domain/appointment_alerts.dart';
 
-/// Thông báo + nhắc lịch khám cho KHÁCH HÀNG (lich_hen.txt – Phần bổ sung N).
-///
-/// KHÔNG có nguồn dữ liệu riêng: nghe đúng [AppointmentsController] mà Trang chủ / Lịch hẹn của
-/// khách đang dùng (lịch của chính khách). Mỗi khi danh sách đổi:
-/// 1. So với trạng thái đã lưu trên máy -> lịch vừa được xác nhận / từ chối -> hiện thông báo.
-/// 2. Lưu lại trạng thái mới.
-/// 3. Đối chiếu lời nhắc: hẹn nhắc 1 ngày + 1 giờ trước giờ khám cho lịch ĐÃ XÁC NHẬN sắp tới,
-///    huỷ lời nhắc của lịch đã bị huỷ / từ chối / đổi giờ / đã qua.
-/// Đăng xuất -> huỷ mọi lời nhắc của tài khoản đó (người khác dùng máy không nhận nhầm).
+/// Thông báo + nhắc lịch khám cho KHÁCH HÀNG.
 class CustomerAlertsController extends ChangeNotifier {
   CustomerAlertsController(this._notifications, this._store);
 
@@ -39,7 +31,7 @@ class CustomerAlertsController extends ChangeNotifier {
   /// Công tắc "Thông báo lịch hẹn" ở tab Cá nhân (lưu trên máy, theo tài khoản).
   bool get enabled => _enabled;
 
-  /// Hệ điều hành có cho phép MediBook hiện thông báo không (người dùng có thể tắt trong Cài đặt).
+  /// Hệ điều hành có cho phép hiện thông báo không.
   bool get systemEnabled => _systemEnabled;
 
   /// Số lời nhắc đang hẹn.
@@ -55,13 +47,12 @@ class CustomerAlertsController extends ChangeNotifier {
     _source = source;
     _lastSignature = null;
     _enabled = await _store.isEnabled(uid);
-    // Xin quyền một lần cho mỗi lần cài app (Android 13+); từ chối thì vẫn dùng app bình thường.
     if (!await _store.wasPermissionAsked()) {
       await _store.markPermissionAsked();
       await _notifications.requestPermission();
     }
     _systemEnabled = await _notifications.isEnabled();
-    if (_uid != uid) return; // đã đăng xuất trong lúc chờ
+    if (_uid != uid) return;
     source.addListener(_onSource);
     _tapSub = _notifications.taps.listen(_openPayload);
     _openPayload(await _notifications.takeLaunchPayload());
@@ -69,7 +60,7 @@ class CustomerAlertsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Ngừng (đăng xuất). Mặc định huỷ mọi lời nhắc của tài khoản này.
+  /// Ngừng (đăng xuất).
   void stop({bool cancelReminders = true}) {
     _source?.removeListener(_onSource);
     _source = null;
@@ -89,7 +80,7 @@ class CustomerAlertsController extends ChangeNotifier {
     }
   }
 
-  /// Bật / tắt thông báo lịch hẹn. Bật lại thì xin quyền (nếu chưa có) và hẹn lại lời nhắc.
+  /// Bật / tắt thông báo lịch hẹn.
   Future<void> setEnabled(bool value) async {
     final uid = _uid;
     if (uid == null) return;
@@ -105,7 +96,7 @@ class CustomerAlertsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Quay lại app (VD vừa bật thông báo trong Cài đặt) -> đọc lại quyền của hệ điều hành.
+  /// Quay lại app.
   Future<void> refreshSystemStatus() async {
     if (_uid == null) return;
     final value = await _notifications.isEnabled();
@@ -114,7 +105,7 @@ class CustomerAlertsController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Chờ các lần đồng bộ đang chạy xong (dùng trong test).
+  /// Chờ các lần đồng bộ đang chạy xong.
   @visibleForTesting
   Future<void> get idle => _queue;
 
@@ -128,7 +119,6 @@ class CustomerAlertsController extends ChangeNotifier {
     final uid = _uid;
     if (source == null || uid == null || source.status != LoadStatus.ready) return;
     final items = List<Appointment>.of(source.items);
-    // Chỉ đồng bộ khi dữ liệu liên quan thật sự đổi (đồng hồ chạy mỗi phút không kích hoạt).
     final signature = '$_enabled|${items.map((a) => '${a.id}:${a.status.name}:'
         '${a.startAt.millisecondsSinceEpoch}').join(',')}';
     if (signature == _lastSignature) return;
@@ -142,7 +132,6 @@ class CustomerAlertsController extends ChangeNotifier {
   }
 
   Future<void> _sync(String uid, List<Appointment> items, DateTime now) async {
-    // 1–2. Thông báo trạng thái mới so với lần trước (lần đầu trên máy này: chỉ ghi nhận, không báo).
     final previous = await _store.loadStatuses(uid);
     if (previous != null && _enabled) {
       for (final alert in detectStatusChanges(previous, items)) {
@@ -156,14 +145,12 @@ class CustomerAlertsController extends ChangeNotifier {
     }
     await _store.saveStatuses(uid, statusSnapshot(items));
 
-    // 3. Đối chiếu lời nhắc.
     final plans = _enabled ? planReminders(items, now) : const <AppointmentAlert>[];
     final wanted = {for (final p in plans) p.id};
     for (final id in (await _store.loadScheduledIds(uid)).difference(wanted)) {
       await _notifications.cancel(id);
     }
     for (final p in plans) {
-      // Cùng id -> hệ điều hành thay lời nhắc cũ (VD lịch đổi giờ).
       await _notifications.schedule(
         id: p.id,
         title: p.title,

@@ -4,11 +4,7 @@ import '../constants/app_strings.dart';
 import '../theme/app_colors.dart';
 import '../utils/app_date_utils.dart';
 
-/// Mở bảng lịch tháng (trượt từ dưới lên) để chọn một ngày trong khoảng
-/// [firstDay]..[lastDay]. Trả về ngày đã chọn, hoặc `null` nếu đóng bảng.
-///
-/// - Mũi tên ‹ › chuyển tháng; bấm tiêu đề "Tháng 11, 2026" để chọn nhanh tháng và năm.
-/// - Ngày ngoài khoảng hoặc bị [isEnabled] loại thì hiện mờ và không bấm được.
+/// Mở bảng lịch tháng để chọn ngày.
 Future<DateTime?> showMonthCalendar(
   BuildContext context, {
   required DateTime today,
@@ -133,7 +129,6 @@ class _MonthCalendarSheetState extends State<MonthCalendarSheet> {
                 _pickingMonth = true;
                 _year = _month.year;
               }),
-              // Cỡ chữ hệ thống lớn / màn hẹp -> co tiêu đề lại thay vì tràn.
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Row(

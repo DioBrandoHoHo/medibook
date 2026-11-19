@@ -9,8 +9,7 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/widgets/password_field.dart';
 import '../../../auth/presentation/widgets/password_rules_checklist.dart';
 
-/// Đổi mật khẩu (thong_tin.txt mục 5). Dùng lại ô mật khẩu và bảng điều kiện của màn Đăng ký.
-/// Mật khẩu hiện tại được kiểm tra lại ở phía máy chủ; mật khẩu không được lưu hay ghi log.
+/// Đổi mật khẩu.
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
 
@@ -78,7 +77,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         _generalError = failure.message;
       }
     });
-    // Hiện lỗi ngay dưới ô Mật khẩu hiện tại.
     _formKey.currentState!.validate();
   }
 
@@ -123,7 +121,6 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         validator: (value) =>
                             Validators.loginPassword(value) ?? _currentError,
                         onChanged: (_) {
-                          // Người dùng sửa lại -> bỏ lỗi "sai mật khẩu hiện tại" cũ.
                           if (_currentError != null) setState(() => _currentError = null);
                         },
                       ),
@@ -135,7 +132,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         controller: _next,
                         label: AppStrings.newPassword,
                         validator: (value) => Validators.changedPassword(value, _current.text),
-                        onChanged: (_) => setState(() {}), // cập nhật bảng điều kiện
+                        onChanged: (_) => setState(() {}),
                       ),
                     ),
                     const SizedBox(height: 10),

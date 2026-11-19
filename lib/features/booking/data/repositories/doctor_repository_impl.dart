@@ -4,17 +4,7 @@ import '../../../../core/services/firestore_errors.dart';
 import '../../domain/entities/doctor.dart';
 import '../../domain/repositories/doctor_repository.dart';
 
-/// Bác sĩ lưu trên Cloud Firestore, collection `doctors`:
-/// ```
-/// doctors/{id}
-///   name:      string
-///   specialty: string
-///   room:      string
-///   isDemo:    bool
-///   experienceYears: int    (tuỳ chọn) số năm kinh nghiệm
-///   bio:             string (tuỳ chọn) giới thiệu ngắn
-///   fee:             int    (tuỳ chọn) phí khám, VND
-/// ```
+/// Bác sĩ lưu trên Cloud Firestore, collection `doctors`.
 class FirestoreDoctorRepository implements DoctorRepository {
   FirestoreDoctorRepository({FirebaseFirestore? firestore})
       : _db = firestore ?? FirebaseFirestore.instance;
@@ -25,7 +15,7 @@ class FirestoreDoctorRepository implements DoctorRepository {
 
   CollectionReference<Map<String, dynamic>> get _col => _db.collection(collection);
 
-  /// Document nhập tay thiếu tên -> bỏ qua để app không hiện thẻ trống.
+  /// Document nhập tay thiếu tên.
   static Doctor? fromMap(String id, Map<String, dynamic> data) {
     final name = data['name'];
     if (name is! String || name.trim().isEmpty) return null;
@@ -40,7 +30,6 @@ class FirestoreDoctorRepository implements DoctorRepository {
       specialty: specialty is String ? specialty.trim() : '',
       room: room is String ? room.trim() : '',
       isDemo: data['isDemo'] == true,
-      // Thiếu / sai kiểu (bác sĩ nhập tay trên Console) -> coi như chưa có thông tin.
       experienceYears: experience is num && experience > 0 ? experience.toInt() : 0,
       bio: bio is String ? bio.trim() : '',
       fee: fee is num && fee > 0 ? fee.toInt() : 0,

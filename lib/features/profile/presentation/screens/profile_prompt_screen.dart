@@ -10,8 +10,7 @@ import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../controllers/profile_controller.dart';
 
-/// Bước hỏi cập nhật hồ sơ (Mục 6).
-/// Chỉ xuất hiện khi chưa hoàn thiện hồ sơ VÀ chưa từng bấm "Để sau".
+/// Bước hỏi cập nhật hồ sơ.
 class ProfilePromptScreen extends StatelessWidget {
   const ProfilePromptScreen({super.key});
 
@@ -33,7 +32,7 @@ class _ProfilePromptView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthController>().currentUser;
-    if (user == null) return const SizedBox.shrink(); // router sẽ chuyển về /auth
+    if (user == null) return const SizedBox.shrink();
 
     return Scaffold(
       body: SafeArea(

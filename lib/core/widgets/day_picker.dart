@@ -7,7 +7,6 @@ import 'day_strip.dart';
 import 'month_calendar_sheet.dart';
 
 /// Ngày đầu tiên chọn được trong tháng chứa [month], trong khoảng [firstDay]..[lastDay].
-/// `null` nếu tháng đó không có ngày nào chọn được. Thuần Dart để unit test.
 DateTime? firstSelectableInMonth(
   DateTime month, {
   required DateTime firstDay,
@@ -23,8 +22,7 @@ DateTime? firstSelectableInMonth(
   return null;
 }
 
-/// Ngày sẽ được chọn khi bấm "tháng trước" ([direction] = -1) / "tháng sau" (+1) từ ngày
-/// [selected]: ngày đầu tiên chọn được của tháng gần nhất theo hướng đó. `null` = hết tháng.
+/// Ngày được chọn khi chuyển sang tháng trước / sau.
 DateTime? monthJumpTarget(
   DateTime selected,
   int direction, {
@@ -48,12 +46,7 @@ DateTime? monthJumpTarget(
   return null;
 }
 
-/// Bộ chọn ngày cho màn hình điện thoại: hàng tiêu đề "‹ Tháng 11, 2026 ›" + dải ngày cuộn
-/// ngang từ [today] tới [lastDay].
-///
-/// - ‹ › nhảy sang tháng trước / sau (chọn ngày đầu tiên chọn được của tháng đó).
-/// - Bấm tên tháng mở bảng lịch tháng, ở đó đổi được cả tháng lẫn năm.
-/// - [isEnabled] loại các ngày không chọn được (hiện mờ ở cả dải ngày và bảng lịch).
+/// Bộ chọn ngày cho màn hình điện thoại.
 class DayPicker extends StatelessWidget {
   const DayPicker({
     super.key,
@@ -114,7 +107,6 @@ class DayPicker extends StatelessWidget {
                     key: const ValueKey('month_label'),
                     onPressed: () => _openCalendar(context),
                     style: TextButton.styleFrom(foregroundColor: AppColors.primaryDark),
-                    // Cỡ chữ hệ thống lớn / màn hẹp -> co lại thay vì tràn.
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       child: Row(

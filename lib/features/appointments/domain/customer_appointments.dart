@@ -2,10 +2,9 @@ import '../../../core/constants/app_strings.dart';
 import 'entities/appointment.dart';
 import 'entities/appointment_status.dart';
 
-// Hàm thuần Dart cho tab Lịch hẹn của Customer (lich_hen.txt).
-// Không phụ thuộc Flutter / Firebase nên unit test được.
+// Hàm thuần Dart cho tab Lịch hẹn của Customer.
 
-/// Ba nhóm hiển thị (lich_hen.txt 3.2). Không giao nhau, phủ hết mọi lịch của khách.
+/// Ba nhóm hiển thị.
 enum CustomerAppointmentFilter {
   /// Còn hiệu lực và chưa tới giờ bắt đầu.
   upcoming,
@@ -18,8 +17,6 @@ enum CustomerAppointmentFilter {
 }
 
 /// Nhóm của một lịch tại thời điểm [now].
-/// "Sắp tới" dùng ĐÚNG điều kiện của `CustomerHomeSummary` (còn hiệu lực + `startAt` sau `now`)
-/// nên số lịch ở tab này luôn bằng chỉ số "Sắp tới" ở Trang chủ.
 CustomerAppointmentFilter groupOf(Appointment a, DateTime now) {
   if (!a.isActive) return CustomerAppointmentFilter.cancelled;
   return a.startAt.isAfter(now)
@@ -27,8 +24,7 @@ CustomerAppointmentFilter groupOf(Appointment a, DateTime now) {
       : CustomerAppointmentFilter.past;
 }
 
-/// Lịch thuộc nhóm [filter], đã sắp xếp (lich_hen.txt 3.3):
-/// Sắp tới tăng dần (gần nhất trên cùng); Đã qua / Đã hủy giảm dần (mới nhất trên cùng).
+/// Lịch thuộc nhóm [filter], đã sắp xếp.
 List<Appointment> customerAppointments(
   List<Appointment> mine,
   CustomerAppointmentFilter filter,
@@ -43,14 +39,10 @@ List<Appointment> customerAppointments(
   return result;
 }
 
-/// Lịch ĐÃ XÁC NHẬN chỉ hủy được khi còn ít nhất chừng này trước giờ khám
-/// (người dùng chốt ngày 16/11/2026). Khai báo một chỗ để dễ đổi.
+/// Lịch ĐÃ XÁC NHẬN chỉ hủy được khi còn ít nhất chừng này trước giờ khám.
 const cancelDeadline = Duration(hours: 2);
 
-/// Vì sao KHÔNG hủy được lịch này (lich_hen.txt 3.4). `null` = hủy được.
-/// - Chờ xác nhận: hủy được tới trước giờ bắt đầu.
-/// - Đã xác nhận: hủy được khi còn ít nhất [cancelDeadline] trước giờ bắt đầu.
-/// - Đã hủy / Đã từ chối / đã tới giờ: không hủy được.
+/// Vì sao KHÔNG hủy được lịch này.
 String? cancelBlockReason(Appointment a, DateTime now) {
   if (!a.isActive) return AppStrings.errAlreadyHandled;
   if (!a.startAt.isAfter(now)) return AppStrings.errCancelPast;

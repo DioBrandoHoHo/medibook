@@ -2,8 +2,7 @@ import '../../../core/utils/app_date_utils.dart';
 import '../../appointments/domain/entities/appointment.dart';
 import '../../appointments/domain/entities/appointment_status.dart';
 
-/// Toàn bộ số liệu của Trang chủ Staff, được TÍNH từ một danh sách lịch hẹn duy nhất.
-/// Không có con số nào được lưu riêng hay cộng trừ thủ công.
+/// Toàn bộ số liệu của Trang chủ Staff.
 class StaffHomeSummary {
   const StaffHomeSummary({
     required this.todayTotal,
@@ -42,11 +41,9 @@ class StaffHomeSummary {
 
   static const upcomingLimit = 3;
 
-  /// Chỉ số "Chờ xác nhận" hôm nay luôn nằm trong số "cần xử lý" (mọi ngày).
   int get pendingOtherDays => pendingAllDays - todayPending;
 
-  /// Lịch chờ đã quá giờ hết hiệu lực phía nhân viên (`Appointment.isOverdueAt`) nên bị bỏ
-  /// TRƯỚC khi đếm – cùng tập lịch mà màn Lịch đặt hiển thị, nên mọi con số luôn khớp bộ lọc.
+  /// Tính số liệu từ danh sách lịch hẹn tại thời điểm [now].
   factory StaffHomeSummary.from(List<Appointment> source, DateTime now) {
     final all = source.where((a) => a.isStaffVisibleAt(now)).toList();
     final today = all.where((a) => AppDateUtils.isSameDay(a.startAt, now)).toList();

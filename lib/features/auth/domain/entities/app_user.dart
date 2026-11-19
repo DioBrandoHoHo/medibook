@@ -2,10 +2,6 @@ import 'user_gender.dart';
 import 'user_role.dart';
 
 /// Hồ sơ tài khoản sau xác thực (KHÔNG chứa mật khẩu).
-///
-/// Đây là bản trong bộ nhớ của document `users/{uid}`. Mọi màn hình (Trang thông tin,
-/// Cập nhật thông tin, lời chào ở Trang tổng quan...) đọc cùng một đối tượng này qua
-/// `AuthController.currentUser`, nên thông tin lúc tạo tài khoản và ở Trang thông tin luôn là một.
 class AppUser {
   const AppUser({
     required this.id,
@@ -20,18 +16,18 @@ class AppUser {
     this.avatar = '',
   });
 
-  final String id; // = Firebase Auth uid
+  final String id;
   final String fullName;
-  final String phone; // đã chuẩn hoá dạng 0xxxxxxxxx – là tên đăng nhập, không sửa được
+  final String phone;
   final UserRole role;
 
-  /// Email LIÊN HỆ (không phải tên đăng nhập). Rỗng = chưa cập nhật.
+  /// Email liên hệ.
   final String email;
 
-  /// Ngày sinh (chỉ ngày, không có giờ). `null` = chưa cập nhật.
+  /// Ngày sinh.
   final DateTime? birthDate;
 
-  /// `null` = chưa cập nhật.
+  /// Giới tính.
   final UserGender? gender;
 
   /// true khi người dùng đã lưu màn Cập nhật thông tin.
@@ -40,8 +36,7 @@ class AppUser {
   /// true khi người dùng đã bấm "Để sau" ở bước hỏi cập nhật hồ sơ.
   final bool profilePromptDismissed;
 
-  /// Ảnh đại diện: ảnh JPEG vuông 256x256 đã nén, mã hoá base64 (lưu ở trường `avatar`
-  /// của `users/{uid}`). Rỗng = chưa có ảnh -> hiện chữ cái đầu của tên.
+  /// Ảnh đại diện.
   final String avatar;
 
   bool get hasAvatar => avatar.isNotEmpty;
@@ -70,8 +65,7 @@ class AppUser {
     avatar: avatar ?? this.avatar,
   );
 
-  /// Bản sao sau khi lưu màn Cập nhật thông tin. Khác [copyWith]: các trường tuỳ chọn
-  /// được GHI ĐÈ kể cả khi rỗng / null (người dùng xoá dữ liệu đã nhập).
+  /// Bản sao sau khi lưu màn Cập nhật thông tin.
   AppUser withProfile({
     required String fullName,
     required String email,

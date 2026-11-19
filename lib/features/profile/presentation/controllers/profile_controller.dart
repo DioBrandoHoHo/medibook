@@ -22,9 +22,7 @@ class ProfileController extends ChangeNotifier {
   bool get isSaving => _isSaving;
   String? get error => _error;
 
-  /// Lưu màn Cập nhật thông tin. Ghi Firestore TRƯỚC; chỉ khi thành công mới cập nhật
-  /// người dùng trong [AuthController] -> mọi màn hình đang hiển thị hồ sơ đổi theo.
-  /// Thất bại thì dữ liệu trong app giữ nguyên.
+  /// Lưu màn Cập nhật thông tin.
   Future<bool> save({
     required String fullName,
     String email = '',
@@ -67,9 +65,7 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
-  /// Lưu ảnh đại diện (chuỗi base64 đã xử lý; `''` = xoá ảnh). Cùng nguyên tắc với [save]:
-  /// ghi Firestore TRƯỚC, thành công mới cập nhật [AuthController] -> mọi nơi hiển thị ảnh
-  /// (thẻ tài khoản, phần đầu Trang chủ, màn Cập nhật thông tin) đổi ngay. Thất bại giữ ảnh cũ.
+  /// Lưu ảnh đại diện.
   Future<bool> saveAvatar(String avatar) async {
     final user = _auth.currentUser;
     if (user == null || _isSaving) return false;
@@ -80,7 +76,6 @@ class ProfileController extends ChangeNotifier {
       await _repository
           .updateAvatar(uid: user.id, avatar: avatar)
           .timeout(saveTimeout, onTimeout: () => throw const NetworkFailure());
-      // Đọc lại người dùng hiện tại: trong lúc chờ ghi, hồ sơ có thể đã đổi ở nơi khác.
       final latest = _auth.currentUser;
       if (latest != null && latest.id == user.id) {
         _auth.updateCurrentUser(latest.copyWith(avatar: avatar));
@@ -98,10 +93,7 @@ class ProfileController extends ChangeNotifier {
     }
   }
 
-  /// Người dùng bấm "Để sau": cập nhật ngay trên app để không chặn việc chuyển trang,
-  /// ghi `profilePromptDismissed = true` lên Firestore ở nền.
-  /// (Firestore tự đồng bộ lại khi có mạng; nếu ghi thất bại thì lần đăng nhập sau
-  /// câu hỏi sẽ xuất hiện lại – không gây lỗi.)
+  /// Người dùng bấm "Để sau".
   void dismissPrompt() {
     final user = _auth.currentUser;
     if (user == null) return;

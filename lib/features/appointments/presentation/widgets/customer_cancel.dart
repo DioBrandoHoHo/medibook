@@ -7,12 +7,7 @@ import '../../../../core/utils/app_date_utils.dart';
 import '../../domain/entities/appointment.dart';
 import '../controllers/appointments_controller.dart';
 
-/// Luồng hủy lịch của Customer (lich_hen.txt 7.2), dùng chung cho thẻ ở tab Lịch hẹn và
-/// màn Chi tiết: hỏi lại -> kiểm tra quy tắc theo dữ liệu mới nhất -> ghi -> báo kết quả.
-/// Trả về `true` nếu đã hủy thành công.
-///
-/// [onBusy] được gọi `true` SAU KHI khách đồng ý (bắt đầu ghi) và `false` khi ghi xong,
-/// để màn gọi khoá nút / hiện vòng xoay đúng lúc.
+/// Luồng hủy lịch của Customer.
 Future<bool> confirmCancelAppointment(
   BuildContext context,
   Appointment appointment, {

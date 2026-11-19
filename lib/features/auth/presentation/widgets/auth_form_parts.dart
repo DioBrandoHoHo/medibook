@@ -43,8 +43,7 @@ class PhoneField extends StatelessWidget {
   }
 }
 
-/// Lối tắt nhỏ ngay dưới ô SĐT khi hệ thống báo số đã / chưa đăng ký
-/// (VD "Đăng nhập bằng số này"). Bấm -> chuyển chế độ, SĐT được giữ nguyên.
+/// Lối tắt nhỏ ngay dưới ô SĐT khi hệ thống báo số đã / chưa đăng ký.
 class PhoneShortcut extends StatelessWidget {
   const PhoneShortcut({super.key, required this.label, required this.onTap});
 

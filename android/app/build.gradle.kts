@@ -12,14 +12,12 @@ if (file("google-services.json").exists()) {
 
 android {
     namespace = "com.medibook.medibook"
-    // flutter_local_notifications (nhắc lịch khám) cần compileSdk >= 37.
     compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        // flutter_local_notifications cần desugaring để hẹn giờ thông báo trên Android cũ.
         isCoreLibraryDesugaringEnabled = true
     }
 

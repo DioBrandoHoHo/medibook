@@ -1,4 +1,4 @@
-/// Thông báo dành cho Staff. Trạng thái đã đọc dùng CHUNG cho mọi Staff.
+/// Thông báo dành cho Staff.
 class AppNotification {
   const AppNotification({
     required this.id,
@@ -16,7 +16,7 @@ class AppNotification {
   final DateTime createdAt;
   final bool isRead;
 
-  /// Lịch hẹn liên quan (nếu có) – bấm thông báo sẽ mở chi tiết lịch này.
+  /// Lịch hẹn liên quan.
   final String? appointmentId;
   final bool isDemo;
 

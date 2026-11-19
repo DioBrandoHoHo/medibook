@@ -2,13 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Dữ liệu nhỏ của thông báo khách hàng, lưu TRÊN MÁY theo từng tài khoản (uid):
-/// - trạng thái lịch hẹn lần cuối app nhìn thấy (để biết lịch nào vừa được xác nhận / từ chối,
-///   kể cả khi việc đó xảy ra lúc app đang tắt);
-/// - công tắc bật / tắt thông báo;
-/// - các id lời nhắc đang hẹn (để huỷ đúng khi lịch đổi hoặc khi đăng xuất);
-/// - đã từng xin quyền thông báo hay chưa.
-/// Không chứa thông tin nhạy cảm (chỉ id lịch hẹn + trạng thái). Tách interface để test.
+/// Dữ liệu thông báo khách hàng lưu trên máy theo từng tài khoản.
 abstract interface class AlertStore {
   Future<Map<String, String>?> loadStatuses(String uid);
   Future<void> saveStatuses(String uid, Map<String, String> statuses);
@@ -23,7 +17,7 @@ abstract interface class AlertStore {
   Future<void> markPermissionAsked();
 }
 
-/// Bản thật dùng `shared_preferences`. Lỗi đọc / ghi không làm app dừng.
+/// Bản thật dùng `shared_preferences`.
 class PrefsAlertStore implements AlertStore {
   Future<SharedPreferences?> _prefs() async {
     try {

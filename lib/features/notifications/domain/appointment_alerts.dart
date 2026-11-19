@@ -3,10 +3,9 @@ import '../../../core/utils/app_date_utils.dart';
 import '../../appointments/domain/entities/appointment.dart';
 import '../../appointments/domain/entities/appointment_status.dart';
 
-// Logic thuần Dart của thông báo / nhắc lịch cho KHÁCH HÀNG (lich_hen.txt – Phần bổ sung N).
-// Không phụ thuộc Flutter / Firebase / plugin nên unit test được.
+// Logic thuần Dart của thông báo / nhắc lịch cho KHÁCH HÀNG.
 
-/// Loại thông báo – dùng để sinh id thông báo ổn định cho mỗi lịch hẹn.
+/// Loại thông báo.
 enum AlertKind { status, dayBefore, hourBefore }
 
 /// Nhắc trước giờ khám bao lâu.
@@ -36,7 +35,7 @@ class AppointmentAlert {
   /// Thời điểm hiện (chỉ có với lời nhắc hẹn giờ).
   final DateTime? fireAt;
 
-  /// Dữ liệu gắn kèm: bấm thông báo -> mở đúng lịch hẹn này.
+  /// Dữ liệu gắn kèm.
   String get payload => payloadFor(appointmentId);
 }
 
@@ -44,15 +43,14 @@ const _payloadPrefix = 'appointment:';
 
 String payloadFor(String appointmentId) => '$_payloadPrefix$appointmentId';
 
-/// Lấy id lịch hẹn từ payload; payload lạ -> `null`.
+/// Lấy id lịch hẹn từ payload.
 String? appointmentIdFromPayload(String? payload) {
   if (payload == null || !payload.startsWith(_payloadPrefix)) return null;
   final id = payload.substring(_payloadPrefix.length);
   return id.isEmpty ? null : id;
 }
 
-/// Id thông báo ổn định (FNV-1a 31 bit) từ id lịch hẹn + loại – không phụ thuộc
-/// `String.hashCode` (có thể khác giữa các lần chạy). Mở lại app vẫn tìm đúng lời nhắc cũ để huỷ.
+/// Id thông báo ổn định (FNV-1a 31 bit) từ id lịch hẹn + loại.
 int notificationIdFor(String appointmentId, AlertKind kind) {
   var hash = 0x811c9dc5;
   for (final unit in '$appointmentId#${kind.name}'.codeUnits) {
@@ -67,10 +65,7 @@ String _who(Appointment a) => a.doctorName ?? a.serviceName;
 String _when(Appointment a) =>
     '${AppDateUtils.time(a.startAt)} ${AppDateUtils.weekdayDate(a.startAt)}';
 
-/// Lịch vừa được nhân viên xử lý so với lần trước app nhìn thấy:
-/// Chờ xác nhận -> Đã xác nhận / Đã từ chối. (Khách tự huỷ thì không báo cho chính khách.)
-/// [previous] = trạng thái đã lưu theo id lịch hẹn; lịch mới xuất hiện (chưa có trong [previous])
-/// không tạo thông báo.
+/// Lịch vừa được nhân viên xử lý so với lần trước app nhìn thấy.
 List<AppointmentAlert> detectStatusChanges(
   Map<String, String> previous,
   List<Appointment> current,
@@ -108,8 +103,7 @@ List<AppointmentAlert> detectStatusChanges(
 Map<String, String> statusSnapshot(List<Appointment> current) =>
     {for (final a in current) a.id: a.status.name};
 
-/// Các lời nhắc NÊN đang được hẹn: chỉ lịch ĐÃ XÁC NHẬN, chưa tới giờ; mỗi lịch nhắc trước
-/// 1 ngày và 1 giờ, bỏ mốc đã trôi qua (VD lịch được xác nhận khi chỉ còn 5 giờ -> chỉ nhắc 1 giờ).
+/// Các lời nhắc NÊN đang được hẹn.
 List<AppointmentAlert> planReminders(List<Appointment> current, DateTime now) {
   final plans = <AppointmentAlert>[];
   for (final a in current) {

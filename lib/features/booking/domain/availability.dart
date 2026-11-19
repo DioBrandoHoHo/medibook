@@ -7,15 +7,11 @@ import 'booking_window.dart';
 import 'entities/busy_slot.dart';
 import 'entities/doctor.dart';
 
-// Các hàm thuần Dart cho phần Đặt lịch của Customer (dat_lich.txt).
-// Không phụ thuộc Flutter / Firebase nên unit test được.
-// Ca làm việc + độ dài khung dùng chung [WorkShift] với tab Lịch làm việc của Staff.
+// Các hàm thuần Dart cho phần Đặt lịch của Customer.
 
 const _slot = Duration(minutes: WorkShift.slotMinutes);
 
 /// Các khung (giờ bắt đầu, đúng lưới ca làm việc) mà một lịch hẹn chiếm.
-/// Lịch lệch lưới (VD 08:10–08:40) chiếm mọi khung nó chạm vào – cùng quy tắc với
-/// `buildSlots` của tab Lịch làm việc.
 List<DateTime> occupiedSlotStarts(DateTime startAt, DateTime endAt) {
   final result = <DateTime>[];
   for (var day = AppDateUtils.dayOnly(startAt);
@@ -30,8 +26,7 @@ List<DateTime> occupiedSlotStarts(DateTime startAt, DateTime endAt) {
   return result;
 }
 
-/// Các khung bận sinh ra từ danh sách lịch hẹn: chỉ lịch CÒN HIỆU LỰC và có bác sĩ.
-/// Lịch Đã hủy / Đã từ chối không giữ khung.
+/// Các khung bận sinh ra từ danh sách lịch hẹn.
 List<BusySlot> busySlotsOf(Iterable<Appointment> appointments) => [
       for (final a in appointments)
         if (a.isActive && a.doctorId != null)
@@ -65,9 +60,6 @@ class BookSlot {
 }
 
 /// Trạng thái của MỘT khung của bác sĩ [doctorId].
-/// - [busyIds]: id các khung bận (`BusySlot.id`) – nguồn chung cho mọi khách hàng.
-/// - [mine]: lịch hẹn của chính khách hàng đang xem.
-/// Khung chỉ đặt được khi CHƯA tới giờ bắt đầu.
 BookSlotState slotStateAt({
   required String doctorId,
   required DateTime start,
@@ -130,17 +122,15 @@ List<DateTime> freeSlotStarts({
     ];
 
 /// Khung giờ mong muốn [slotMinutes] còn chọn được vào ngày [day] không (chưa tới giờ).
-/// `null` (giờ bất kỳ) luôn hợp lệ.
 bool wantedSlotStillValid(DateTime day, int? slotMinutes, DateTime now) =>
     slotMinutes == null || slotStartOn(day, slotMinutes).isAfter(now);
 
-/// Ngày [day] còn ít nhất một khung chưa tới giờ (bỏ qua ai đã đặt). Dùng để làm mờ
-/// "hôm nay" khi đã hết giờ làm việc.
+/// Ngày [day] còn ít nhất một khung chưa tới giờ.
 bool dayHasFutureSlot(DateTime day, DateTime now) => WorkShift.values.any(
       (shift) => shift.slotStartsOn(day).any((s) => s.isAfter(now)),
     );
 
-/// Phút trong ngày của mọi khung trong ca làm việc (VD 450 = 07:30), tăng dần.
+/// Phút trong ngày của mọi khung trong ca làm việc.
 List<int> allSlotMinutes() {
   final day = DateTime(2000);
   return [
@@ -165,13 +155,13 @@ class DoctorFilter {
   /// Ngày khám mong muốn (00:00).
   final DateTime day;
 
-  /// Giờ khám mong muốn = phút trong ngày của khung (VD 510 = 08:30). `null` = giờ bất kỳ.
+  /// Giờ khám mong muốn (phút trong ngày).
   final int? slotMinutes;
 
-  /// Từ khoá: tên bác sĩ hoặc chuyên khoa (không phân biệt hoa thường / dấu).
+  /// Từ khoá tìm kiếm.
   final String query;
 
-  /// Chuyên khoa. `null` = tất cả.
+  /// Chuyên khoa.
   final String? specialty;
 
   /// Ẩn bác sĩ không còn khung trống nào trong ngày.
@@ -192,9 +182,6 @@ class DoctorAvailability {
 }
 
 /// Lọc + sắp xếp bác sĩ theo [filter].
-/// - Có chọn giờ mong muốn -> CHỈ giữ bác sĩ còn trống đúng khung đó.
-/// - Không chọn giờ -> giữ mọi bác sĩ (hoặc chỉ bác sĩ còn trống nếu bật `onlyFree`).
-/// - Thứ tự: bác sĩ còn trống trước, rồi theo tên.
 List<DoctorAvailability> applyDoctorFilter({
   required List<Doctor> doctors,
   required DoctorFilter filter,
@@ -236,7 +223,7 @@ List<DoctorAvailability> applyDoctorFilter({
 List<String> specialtiesOf(List<Doctor> doctors) =>
     ({for (final d in doctors) if (d.specialty.isNotEmpty) d.specialty}.toList()..sort());
 
-/// Kiểm tra trước khi đặt. Trả về `null` nếu đặt được, hoặc thông báo lỗi.
+/// Kiểm tra trước khi đặt.
 String? checkBooking({
   required String doctorId,
   required DateTime start,
@@ -247,7 +234,6 @@ String? checkBooking({
   final end = start.add(_slot);
   if (!start.isAfter(now)) return AppStrings.errSlotPast;
   if (!BookingWindow.contains(start, now)) return AppStrings.errDayTooFar;
-  // Khách đã có lịch còn hiệu lực giao với khung này (với bất kỳ bác sĩ nào).
   if (mine.any((a) => a.isActive && a.startAt.isBefore(end) && a.endAt.isAfter(start))) {
     return AppStrings.errOwnOverlap;
   }

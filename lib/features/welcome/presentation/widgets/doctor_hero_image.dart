@@ -2,12 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
-/// Ảnh bác sĩ ở màn Welcome: `assets/images/welcome_doctor.webp` (WebP 1536x2752, ~118 KB, ảnh dọc).
-///
-/// - Căn khung hơi lệch lên trên để thấy rõ khuôn mặt + áo blouse.
-/// - Giải mã ảnh theo đúng chiều rộng màn hình ([Image.cacheWidth]) thay vì bản gốc 1536px
-///   để giảm bộ nhớ.
-/// - Nếu file lỗi/thiếu, hiển thị hình minh hoạ để app không vỡ giao diện.
+/// Ảnh bác sĩ ở màn Welcome.
 class DoctorHeroImage extends StatelessWidget {
   const DoctorHeroImage({super.key});
 

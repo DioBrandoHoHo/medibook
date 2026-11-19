@@ -1,10 +1,8 @@
 import '../../../core/utils/app_date_utils.dart';
 
-/// Khoảng ngày khách hàng được đặt lịch (dat_lich.txt phần bổ sung C). Thuần Dart, khai báo MỘT chỗ:
-/// dải chọn ngày, bảng lịch tháng, `checkBooking` đều đọc ở đây. `firestore.rules` có một
-/// con số tương ứng (`duration.value(180, 'd')`) – đổi thì sửa cả hai.
+/// Khoảng ngày khách hàng được đặt lịch.
 abstract final class BookingWindow {
-  /// Số ngày được đặt trước, tính cả hôm nay (≈ 6 tháng).
+  /// Số ngày được đặt trước, tính cả hôm nay.
   static const days = 180;
 
   /// Ngày đầu tiên chọn được = hôm nay (00:00).
@@ -19,7 +17,7 @@ abstract final class BookingWindow {
     return !d.isBefore(firstDay(now)) && !d.isAfter(lastDay(now));
   }
 
-  /// Đưa [day] về trong khoảng được đặt: `null` / ngày đã qua -> hôm nay; quá xa -> ngày cuối.
+  /// Đưa [day] về trong khoảng được đặt.
   static DateTime clamp(DateTime? day, DateTime now) {
     final first = firstDay(now);
     if (day == null) return first;

@@ -7,7 +7,7 @@ import '../../../../core/utils/name_utils.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/availability.dart';
 
-/// Thẻ trắng bo góc có bóng nhẹ – khung chung cho các khối của khu vực Customer.
+/// Thẻ trắng bo góc có bóng nhẹ.
 class SectionCard extends StatelessWidget {
   const SectionCard({super.key, required this.child, this.onTap, this.radius = 20});
 
@@ -32,8 +32,7 @@ class SectionCard extends StatelessWidget {
   }
 }
 
-/// Một bác sĩ trong danh sách: chữ cái đại diện, họ tên, chuyên khoa, phòng, kinh nghiệm
-/// và tình trạng trống của ngày đang xem. Dùng chung cho Trang chủ và tab Đặt lịch.
+/// Một bác sĩ trong danh sách.
 class DoctorCard extends StatelessWidget {
   const DoctorCard({
     super.key,
@@ -45,7 +44,7 @@ class DoctorCard extends StatelessWidget {
   final DoctorAvailability item;
   final VoidCallback onTap;
 
-  /// Khung giờ khách đang muốn khám (nếu có) -> nhãn ghi "Trống lúc HH:mm".
+  /// Khung giờ khách đang muốn khám.
   final DateTime? wantedStart;
 
   @override
@@ -154,11 +153,9 @@ class _AvailabilityBadge extends StatelessWidget {
         ],
       ),
     );
-    // Chưa chọn giờ mong muốn -> ghi thêm ca trống gần nhất bên cạnh.
     if (!free || wanted != null) return badge;
     return Row(
       children: [
-        // Cả hai đều co được: chữ to / màn hẹp thì cắt bớt thay vì tràn.
         Flexible(flex: 3, child: badge),
         const SizedBox(width: 8),
         Flexible(

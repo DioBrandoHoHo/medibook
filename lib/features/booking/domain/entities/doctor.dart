@@ -1,5 +1,4 @@
-/// Một bác sĩ (document `doctors/{id}`). Dùng chung cho tab Lịch làm việc của Staff
-/// và phần Đặt lịch của Customer – cả hai đọc cùng một danh sách.
+/// Một bác sĩ.
 class Doctor {
   const Doctor({
     required this.id,
@@ -15,26 +14,25 @@ class Doctor {
   final String id;
   final String name;
 
-  /// Chuyên khoa, VD "Nội tổng quát".
+  /// Chuyên khoa.
   final String specialty;
 
-  /// Phòng khám, VD "Phòng 101". Rỗng = chưa có.
+  /// Phòng khám.
   final String room;
 
   /// true = dữ liệu mẫu.
   final bool isDemo;
 
-  /// Số năm kinh nghiệm. 0 = chưa có thông tin.
+  /// Số năm kinh nghiệm.
   final int experienceYears;
 
-  /// Giới thiệu ngắn. Rỗng = chưa có.
+  /// Giới thiệu ngắn.
   final String bio;
 
-  /// Phí khám (VND). 0 = chưa có thông tin.
+  /// Phí khám.
   final int fee;
 
-  /// Tên dịch vụ ghi vào lịch hẹn khi đặt bác sĩ này, VD "Khám nội tổng quát".
-  /// Staff thấy đúng chuỗi này ở Lịch đặt / Chi tiết lịch hẹn.
+  /// Tên dịch vụ ghi vào lịch hẹn.
   String get serviceName {
     final s = specialty.trim();
     if (s.isEmpty) return 'Khám bệnh';

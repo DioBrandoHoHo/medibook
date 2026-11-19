@@ -10,11 +10,7 @@ import '../../data/avatar_picker.dart';
 import '../../domain/avatar_image.dart';
 import '../controllers/profile_controller.dart';
 
-/// Luồng đổi ảnh đại diện khi bấm vào ảnh ở thẻ tài khoản (Nhân viên và Khách hàng dùng chung):
-/// bảng chọn (Chọn từ thư viện / Xoá ảnh) -> thư viện ảnh -> cắt vuông + nén -> xem trước ->
-/// Lưu (ghi Firestore qua [ProfileController.saveAvatar]) -> thông báo kết quả.
-///
-/// [busy] được bật trong lúc xử lý / lưu để thẻ tài khoản hiện vòng xoay trên ảnh.
+/// Luồng đổi ảnh đại diện.
 Future<void> changeAvatar(
   BuildContext context,
   ProfileController profile, {
@@ -50,11 +46,11 @@ Future<void> changeAvatar(
     return;
   }
 
-  // Chọn từ thư viện.
+  // Chọn từ thư viện
   final picked = await picker.pickFromGallery();
   switch (picked) {
     case AvatarPickCancelled():
-      return; // người dùng tự đóng thư viện -> không báo gì
+      return;
     case AvatarPickDenied():
       show(AppStrings.avatarPermissionDenied);
       return;

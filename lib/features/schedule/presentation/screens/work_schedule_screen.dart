@@ -17,12 +17,7 @@ import '../../domain/work_shift.dart';
 import '../widgets/doctor_schedule_card.dart';
 import '../widgets/slot_style.dart';
 
-/// Tab "Lịch làm việc" của Staff (lich_lam_viec.txt): mỗi bác sĩ một thẻ, chọn buổi
-/// Sáng / Chiều để xem 8 khung 30 phút còn trống hay đã có khách.
-///
-/// Màn này KHÔNG giữ lịch hẹn riêng: trạng thái từng khung được tính bằng [buildSlots]
-/// từ `AppointmentsController.items` – cùng danh sách với Tổng quan và Lịch đặt –
-/// nên xác nhận / từ chối ở tab khác thì khung ở đây đổi theo.
+/// Tab "Lịch làm việc" của Staff.
 class WorkScheduleScreen extends StatefulWidget {
   const WorkScheduleScreen({super.key});
 
@@ -34,15 +29,15 @@ class WorkScheduleScreen extends StatefulWidget {
 }
 
 class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
-  /// Ngày đang xem (00:00). `null` = hôm nay.
+  /// Ngày đang xem.
   DateTime? _selectedDay;
 
-  /// Buổi đang xem của từng bác sĩ; chưa chọn thì dùng buổi mặc định.
+  /// Buổi đang xem của từng bác sĩ.
   final Map<String, WorkShift> _shiftByDoctor = {};
 
   bool _onlyFree = false;
 
-  /// Tìm kiếm + lọc chuyên khoa (nhiều bác sĩ, khó xem hết một lượt).
+  /// Tìm kiếm + lọc chuyên khoa.
   final _search = TextEditingController();
   String _query = '';
   String? _specialty;
@@ -65,7 +60,7 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
   void _selectDay(DateTime day) {
     setState(() {
       _selectedDay = day;
-      _shiftByDoctor.clear(); // sang ngày khác -> về buổi mặc định của ngày đó
+      _shiftByDoctor.clear();
     });
   }
 
@@ -75,7 +70,6 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
     final doctors = context.watch<DoctorsController>();
     final now = appointments.now;
     final today = AppDateUtils.dayOnly(now);
-    // Ngày đã chọn bị trôi về quá khứ (app mở qua đêm) -> quay về hôm nay.
     final selected =
         _selectedDay == null || _selectedDay!.isBefore(today) ? today : _selectedDay!;
 
@@ -156,7 +150,6 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
 
     final items = appointments.items;
     final matched = filterScheduleDoctors(doctors.items, query: _query, specialty: _specialty);
-    // Thẻ tổng hợp tính theo các bác sĩ đang lọc -> con số khớp với danh sách bên dưới.
     final summary = summarizeDay(doctors: matched, day: day, appointments: items, now: now);
     final visible = _onlyFree
         ? matched.where((d) => _freeInDay(d, day, items, now) > 0).toList()
@@ -256,8 +249,6 @@ class _WorkScheduleScreenState extends State<WorkScheduleScreen> {
             padding: const EdgeInsets.only(top: 24),
             child: Column(
               children: [
-                // Không còn ai sau khi tìm / chọn khoa -> "không có bác sĩ phù hợp";
-                // chỉ do bật "còn trống" -> như trước.
                 matched.isEmpty
                     ? const EmptyView(message: AppStrings.noDoctorMatch, icon: Icons.search_off_rounded)
                     : const EmptyView(message: AppStrings.noFreeDoctors, icon: Icons.event_busy_rounded),
@@ -351,8 +342,7 @@ class _SpecialtyChip extends StatelessWidget {
   }
 }
 
-/// Thẻ tổng hợp của ngày đang chọn: số khung Trống / Chờ xác nhận / Đã đặt của các bác sĩ
-/// đang hiển thị (theo tìm kiếm / chuyên khoa).
+/// Thẻ tổng hợp của ngày đang chọn.
 class _DaySummaryCard extends StatelessWidget {
   const _DaySummaryCard({required this.day, required this.now, required this.summary});
 

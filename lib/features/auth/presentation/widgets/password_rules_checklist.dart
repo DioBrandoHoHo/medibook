@@ -4,7 +4,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/validators.dart';
 
-/// Checklist 4 điều kiện mật khẩu (Mục 4.2), đổi màu ngay khi người dùng gõ.
+/// Checklist 4 điều kiện mật khẩu, đổi màu ngay khi người dùng gõ.
 class PasswordRulesChecklist extends StatelessWidget {
   const PasswordRulesChecklist({super.key, required this.rules});
 

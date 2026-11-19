@@ -4,23 +4,6 @@ import '../../domain/entities/user_gender.dart';
 import '../../domain/entities/user_role.dart';
 
 /// Ánh xạ giữa document Firestore `users/{uid}` và entity [AppUser].
-///
-/// Cấu trúc document:
-/// ```
-/// users/{uid}
-///   fullName:               string
-///   phone:                  string   (0xxxxxxxxx – đã chuẩn hoá)
-///   role:                   'customer' | 'staff'
-///   email:                  string   (email liên hệ; thiếu hoặc '' = chưa cập nhật)
-///   birthDate:              string   ('yyyy-MM-dd'; thiếu hoặc null = chưa cập nhật)
-///   gender:                 'male' | 'female' | 'other' (thiếu hoặc null = chưa cập nhật)
-///   profileCompleted:       bool     (đã lưu màn Cập nhật thông tin)
-///   profilePromptDismissed: bool     (đã bấm "Để sau")
-///   avatar:                 string   (ảnh đại diện JPEG 256x256 base64; thiếu hoặc '' = chưa có)
-///   createdAt:              timestamp
-///   updatedAt:              timestamp
-/// ```
-/// Document cũ chưa có các trường mới được hiểu là "chưa cập nhật".
 abstract final class UserModel {
   static const collection = 'users';
 
@@ -60,12 +43,11 @@ abstract final class UserModel {
     'profileCompleted': true,
   };
 
-  /// Giới hạn độ dài chuỗi ảnh (khớp Security Rules). Dữ liệu lạ / quá lớn -> coi như chưa có ảnh.
+  /// Giới hạn độ dài chuỗi ảnh.
   static const maxAvatarLength = 200000;
 
   static String _avatar(Object? value) =>
       value is String && value.length <= maxAvatarLength ? value : '';
 
-  // Document nhập tay trên Console có thể sai kiểu -> không để app crash.
   static String _string(Object? value) => value is String ? value : '';
 }

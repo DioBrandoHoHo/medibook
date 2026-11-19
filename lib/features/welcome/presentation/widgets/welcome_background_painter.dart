@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Các đường cong mảnh trên nền tối của màn Welcome (giống ảnh mẫu).
+/// Các đường cong mảnh trên nền tối của màn Welcome.
 class WelcomeBackgroundPainter extends CustomPainter {
   const WelcomeBackgroundPainter();
 

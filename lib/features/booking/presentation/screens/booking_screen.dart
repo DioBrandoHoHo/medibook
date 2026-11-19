@@ -17,12 +17,7 @@ import '../controllers/doctors_controller.dart';
 import '../widgets/doctor_card.dart';
 import 'doctor_detail_screen.dart';
 
-/// Tab "Đặt lịch" của Customer (dat_lich.txt): chọn thời gian mong muốn + lọc ->
-/// danh sách bác sĩ phù hợp -> bấm vào bác sĩ để xem thông tin, lịch trống và đặt.
-///
-/// Điều kiện lọc nằm ở [CustomerNavController] (trạng thái giao diện). Danh sách hiển thị
-/// do hàm thuần Dart [applyDoctorFilter] tính từ `DoctorsController` + `BusySlotsController`
-/// – cùng nguồn với Trang chủ và màn Thông tin bác sĩ.
+/// Tab "Đặt lịch" của Customer.
 class BookingScreen extends StatefulWidget {
   const BookingScreen({super.key});
 
@@ -45,8 +40,7 @@ class _BookingScreenState extends State<BookingScreen> {
     }
   }
 
-  /// Từ khoá bị đổi từ nơi khác (VD Trang chủ mở sẵn một chuyên khoa, bấm "Xoá bộ lọc")
-  /// -> ô tìm kiếm hiển thị theo.
+  /// Đồng bộ ô tìm kiếm khi từ khoá đổi từ nơi khác.
   void _syncSearch() {
     final query = _nav?.query ?? '';
     if (_search.text != query) _search.text = query;
@@ -67,7 +61,6 @@ class _BookingScreenState extends State<BookingScreen> {
     final busy = context.watch<BusySlotsController>();
     final now = appointments.now;
     final today = AppDateUtils.dayOnly(now);
-    // Ngày đã chọn bị trôi về quá khứ (app mở qua đêm) -> hôm nay; quá xa -> ngày cuối được đặt.
     final day = BookingWindow.clamp(nav.day, now);
 
     return Scaffold(
@@ -261,7 +254,6 @@ class _BookingScreenState extends State<BookingScreen> {
                 style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
             ),
-            // Đã chọn giờ thì danh sách vốn chỉ còn bác sĩ trống đúng giờ đó.
             if (nav.slotMinutes == null)
               FilterChip(
                 key: const ValueKey('only_free_doctors'),
@@ -324,9 +316,7 @@ class _BookingScreenState extends State<BookingScreen> {
     ];
   }
 
-  /// Đổi ngày khám mong muốn. Khung giờ mong muốn đang chọn mà đã qua ở ngày mới
-  /// (VD chọn 08:00 ngày mai rồi quay về hôm nay lúc 10:00) -> bỏ chọn giờ và báo cho khách,
-  /// để danh sách không lọc theo một khung không thể đặt.
+  /// Đổi ngày khám mong muốn.
   void _selectDay(BuildContext context, CustomerNavController nav, DateTime day, DateTime now) {
     final target = BookingWindow.clamp(day, now);
     final slot = nav.slotMinutes;
@@ -362,7 +352,6 @@ class _BookingScreenState extends State<BookingScreen> {
       ),
       builder: (_) => _TimeSheet(day: day, now: now, selected: nav.slotMinutes),
     );
-    // -1 = "Giờ bất kỳ"; null = đóng bảng mà không chọn.
     if (picked == null) return;
     nav.setSlotMinutes(picked < 0 ? null : picked);
   }
@@ -434,7 +423,7 @@ class _TimeFilterButton extends StatelessWidget {
   }
 }
 
-/// Bảng chọn giờ: mọi khung 30 phút của hai buổi. Khung đã qua (khi xem hôm nay) bị khoá.
+/// Bảng chọn giờ.
 class _TimeSheet extends StatelessWidget {
   const _TimeSheet({required this.day, required this.now, required this.selected});
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Bảng màu MediBook: trắng – xanh dương.
+/// Bảng màu MediBook.
 abstract final class AppColors {
   static const primary = Color(0xFF1E6FEB);
   static const primaryBright = Color(0xFF4F8DFF);
@@ -17,9 +17,9 @@ abstract final class AppColors {
   static const errorLight = Color(0xFFFEECEC);
   static const successLight = Color(0xFFE5F6EC);
   static const warningLight = Color(0xFFFEF3DC);
-  static const warningDark = Color(0xFFB45309); // chữ cam trên nền cam nhạt (dễ đọc hơn)
+  static const warningDark = Color(0xFFB45309);
 
-  // Trạng thái lịch hẹn (lich_dat.txt 3.3): Đã từ chối = đỏ, Đã hủy = đỏ nhạt.
+  // Trạng thái lịch hẹn
   static const rejected = Color(0xFFC81E1E);
   static const rejectedLight = Color(0xFFFDDCDC);
   static const cancelled = Color(0xFFE5606A);
@@ -30,7 +30,6 @@ abstract final class AppColors {
     BoxShadow(color: Color(0x0F1E3A8A), blurRadius: 14, offset: Offset(0, 4)),
   ];
 
-  // Màn Welcome (nền tối theo ảnh mẫu)
   static const welcomeDark = Color(0xFF1C1F26);
   static const welcomeMuted = Color(0xFF8A8F9C);
 }

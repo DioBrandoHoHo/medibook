@@ -8,9 +8,7 @@ import '../../domain/entities/appointment.dart';
 import '../screens/appointment_detail_screen.dart';
 import 'status_chip.dart';
 
-/// Một lịch hẹn: ảnh đại diện, tên người đặt, dịch vụ, giờ, ngày, trạng thái.
-/// Dùng chung cho Trang chủ (dạng gọn) và màn Lịch đặt (thêm mã lịch + [footer]).
-/// Bấm vào sẽ mở Chi tiết lịch hẹn theo đúng id của lịch.
+/// Một lịch hẹn.
 class AppointmentTile extends StatelessWidget {
   const AppointmentTile({
     super.key,
@@ -27,18 +25,16 @@ class AppointmentTile extends StatelessWidget {
   /// Hiện mã lịch cạnh tên dịch vụ (màn Lịch đặt).
   final bool showCode;
 
-  /// Có giá trị -> ngày hiện dạng gọn "Ngày mai" / "T5, 19/11"; lịch hôm nay chưa bắt đầu hiện
-  /// "còn 25 phút" thay cho ngày (Trang chủ). `null` -> ngày đầy đủ dd/MM/yyyy (Lịch đặt).
+  /// Giờ hiện tại, dùng để hiện ngày dạng gọn.
   final DateTime? now;
 
   /// Hiện tên bác sĩ khám ở dòng dưới dịch vụ (nếu lịch đã gắn bác sĩ).
   final bool showDoctor;
 
-  /// `false` -> chỉ hiện giờ, không hiện ngày (màn Lịch đặt đã có tiêu đề ngày phía trên).
+  /// Hiện ngày cạnh giờ khám.
   final bool showDate;
 
   /// Vùng dưới cùng của thẻ (VD nút Xác nhận / Từ chối ở màn Lịch đặt).
-  /// Trang chủ không truyền -> không có nút xử lý trên thẻ (trang_chu.txt 2.4).
   final Widget? footer;
 
   @override
@@ -50,7 +46,6 @@ class AppointmentTile extends StatelessWidget {
         ? AppDateUtils.date(a.startAt)
         : AppDateUtils.shortDayLabel(a.startAt, now);
     final startsIn = now == null ? null : AppDateUtils.startsIn(a.startAt, now);
-    // Nhãn xanh sau giờ khám: "còn 25 phút" (lịch hôm nay chưa bắt đầu).
     final trailing = startsIn;
     final time = AppDateUtils.timeRange(a.startAt, a.endAt);
     final timeText = trailing != null ? '$time  •  ' : (showDate ? '$time  •  $dateText' : time);
@@ -145,8 +140,6 @@ class AppointmentTile extends StatelessWidget {
                           const SizedBox(width: 5),
                           Flexible(
                             child: Text(
-                              // Lịch hôm nay chưa bắt đầu: "còn 25 phút" thay cho chữ "Hôm nay"
-                              // (vừa đủ nghĩa, không bị cắt chữ trên màn hình hẹp).
                               timeText,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,

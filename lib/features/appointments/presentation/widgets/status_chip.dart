@@ -4,8 +4,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/appointment_status.dart';
 
-/// Tên tiếng Việt + màu của từng trạng thái lịch hẹn. Mọi màn hình dùng chung bảng này
-/// (lich_dat.txt 3.3): Chờ xác nhận = cam, Đã xác nhận = xanh lá, Đã hủy = đỏ nhạt, Đã từ chối = đỏ.
+/// Tên tiếng Việt + màu của từng trạng thái lịch hẹn.
 abstract final class StatusStyle {
   static String labelOf(AppointmentStatus status) => switch (status) {
         AppointmentStatus.pending => AppStrings.statusPending,

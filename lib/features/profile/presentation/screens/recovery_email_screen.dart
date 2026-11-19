@@ -10,11 +10,7 @@ import '../../../auth/domain/entities/recovery_email.dart';
 import '../../../auth/presentation/controllers/auth_controller.dart';
 import '../../../auth/presentation/widgets/password_field.dart';
 
-/// Màn "Email khôi phục mật khẩu" (mở từ thẻ Bảo mật của tab Tài khoản / Cá nhân).
-///
-/// Người dùng nhập một email thật + mật khẩu hiện tại -> hệ thống gửi liên kết xác minh.
-/// Chỉ sau khi bấm liên kết, email mới có hiệu lực để nhận liên kết đặt lại mật khẩu ở màn
-/// Quên mật khẩu. Người dùng vẫn đăng nhập bằng số điện thoại như cũ.
+/// Màn "Email khôi phục mật khẩu".
 class RecoveryEmailScreen extends StatefulWidget {
   const RecoveryEmailScreen({super.key});
 
@@ -44,7 +40,6 @@ class _RecoveryEmailScreenState extends State<RecoveryEmailScreen> {
   @override
   void initState() {
     super.initState();
-    // Sau khung hình đầu tiên mới tải: _load cần ScaffoldMessenger / Navigator của context.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _load(prefill: true);
     });
@@ -68,11 +63,9 @@ class _RecoveryEmailScreenState extends State<RecoveryEmailScreen> {
     final (status, failure) = await auth.recoveryEmailStatus();
     if (!mounted) return;
     if (failure == AuthFailure.sessionExpired) {
-      // Email vừa được xác minh -> Firebase thu hồi phiên cũ. Đăng nhập lại ngầm vào đúng tài khoản
-      // (mật khẩu tạm từ lúc gửi liên kết; không còn thì hỏi lại mật khẩu ngay tại đây).
       var renewed = await auth.resumeAfterEmailChange() == null;
       if (!renewed && mounted) {
-        setState(() => _loading = false); // bỏ vòng xoay phía sau hộp nhập mật khẩu
+        setState(() => _loading = false);
         renewed = await _askPassword();
       }
       if (!mounted) return;
@@ -81,10 +74,8 @@ class _RecoveryEmailScreenState extends State<RecoveryEmailScreen> {
         await _load();
         return;
       }
-      // Người dùng bỏ qua hộp nhập mật khẩu -> như trước: về màn Đăng nhập.
       navigator.pop();
       await auth.logout();
-      // Hiện sau khi đã về màn Đăng nhập để thông báo không bị mất theo màn cũ.
       messenger.showSnackBar(const SnackBar(content: Text(AppStrings.reloginAfterVerify)));
       return;
     }
@@ -93,13 +84,12 @@ class _RecoveryEmailScreenState extends State<RecoveryEmailScreen> {
       _status = status;
       _loadError = failure?.message;
       if (prefill && status != null && _email.text.isEmpty) {
-        // Gợi ý: email đang chờ / đã xác minh, hoặc email liên hệ trong hồ sơ.
         _email.text = status.pending ?? status.verified ?? auth.currentUser?.email ?? '';
       }
     });
   }
 
-  /// Hỏi lại mật khẩu để tiếp tục phiên (không phải đăng nhập lại từ đầu). `true` = đã tiếp tục.
+  /// Hỏi lại mật khẩu để tiếp tục phiên.
   Future<bool> _askPassword() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -242,8 +232,7 @@ class _RecoveryEmailScreenState extends State<RecoveryEmailScreen> {
   }
 }
 
-/// Hộp nhập lại mật khẩu sau khi email khôi phục được xác minh (khi app không còn giữ mật khẩu
-/// tạm, VD đã tắt app trước khi bấm liên kết). Đúng mật khẩu -> tiếp tục phiên tại chỗ.
+/// Hộp nhập lại mật khẩu sau khi email khôi phục được xác minh.
 class _ResumeSessionDialog extends StatefulWidget {
   const _ResumeSessionDialog();
 
@@ -332,7 +321,7 @@ class _ResumeSessionDialogState extends State<_ResumeSessionDialog> {
   }
 }
 
-/// Thẻ trạng thái: Chưa thiết lập / Đã xác minh / Đang chờ xác minh.
+/// Thẻ trạng thái.
 class _StatusCard extends StatelessWidget {
   const _StatusCard({required this.status, required this.checking, required this.onCheck});
 

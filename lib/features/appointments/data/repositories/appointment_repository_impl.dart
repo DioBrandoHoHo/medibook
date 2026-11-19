@@ -13,19 +13,6 @@ import '../../domain/repositories/appointment_repository.dart';
 import '../models/appointment_model.dart';
 
 /// Lịch hẹn lưu trên Cloud Firestore, collection `appointments`.
-/// Firestore tự giữ bộ đệm trên máy nên mở lại app vẫn thấy dữ liệu đã thay đổi.
-///
-/// Kèm collection `busy_slots` – "bản chiếu" không có thông tin khách hàng của các lịch
-/// còn hiệu lực, để Customer biết bác sĩ còn trống khung nào:
-/// ```
-/// busy_slots/{doctorId}_{startAt tính bằng mili-giây}
-///   doctorId:      string
-///   startAt:       timestamp  (giờ bắt đầu khung 30 phút)
-///   appointmentId: string
-///   isDemo:        bool
-/// ```
-/// Mọi thao tác làm đổi việc giữ khung (đặt, hủy, từ chối) đều ghi
-/// `appointments` và `busy_slots` trong CÙNG một lần ghi, nên hai nơi không lệch nhau.
 class FirestoreAppointmentRepository implements AppointmentRepository {
   FirestoreAppointmentRepository({FirebaseFirestore? firestore})
       : _db = firestore ?? FirebaseFirestore.instance;
@@ -41,7 +28,7 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
 
   static List<Appointment> _parse(QuerySnapshot<Map<String, dynamic>> snapshot) => snapshot.docs
       .map((doc) => AppointmentModel.fromMap(doc.id, doc.data()))
-      .whereType<Appointment>() // bỏ qua document sai định dạng
+      .whereType<Appointment>()
       .toList();
 
   @override
@@ -55,7 +42,6 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
 
   @override
   Stream<List<Appointment>> watchMine(String customerId) {
-    // Chỉ lọc theo customerId (khớp Security Rules, không cần tạo index); sắp xếp trên máy.
     return _col
         .where('customerId', isEqualTo: customerId)
         .snapshots()
@@ -103,7 +89,7 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
     String? doctorId,
     String? doctorName,
   }) async {
-    final doc = _col.doc(); // id tự sinh
+    final doc = _col.doc();
     final appointment = Appointment(
       id: doc.id,
       customerId: customerId,
@@ -116,9 +102,6 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
       doctorName: doctorName,
     );
     final locks = busySlotsOf([appointment]);
-    // Giao dịch: kiểm tra khung còn trống rồi ghi lịch hẹn + thông báo cho Staff + giữ khung
-    // (cùng thành công hoặc cùng thất bại). Hai người đặt cùng lúc -> chỉ một người thành công;
-    // Security Rules cũng chặn việc ghi đè lên khung đã có người giữ.
     await _guard(
       () => _db.runTransaction((tx) async {
         for (final lock in locks) {
@@ -153,7 +136,6 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
             'status': status.name,
             'updatedAt': FieldValue.serverTimestamp(),
           });
-        // Từ chối / hủy -> trả lại khung giờ của bác sĩ trong cùng lần ghi.
         if (status == AppointmentStatus.rejected || status == AppointmentStatus.cancelled) {
           final locks = await _busy.where('appointmentId', isEqualTo: id).get();
           for (final lock in locks.docs) {
@@ -170,7 +152,6 @@ class FirestoreAppointmentRepository implements AppointmentRepository {
             'status': AppointmentStatus.cancelled.name,
             'updatedAt': FieldValue.serverTimestamp(),
           })
-          // Báo cho Staff biết khách đã hủy (cùng lần ghi với việc đổi trạng thái).
           ..set(_db.collection(NotificationModel.collection).doc(), {
             'title': AppStrings.notifCancelledTitle,
             'body': DemoData.cancelledBody(

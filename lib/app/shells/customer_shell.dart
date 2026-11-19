@@ -19,11 +19,7 @@ import '../../features/notifications/presentation/controllers/customer_alerts_co
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import 'customer_nav_controller.dart';
 
-/// Khung điều hướng 4 tab của Customer: Trang chủ / Đặt lịch / Lịch hẹn / Cá nhân.
-///
-/// Khi Customer vào khu vực này, shell bắt đầu lắng nghe: lịch hẹn CỦA CHÍNH MÌNH,
-/// danh sách bác sĩ và các khung giờ đã có người đặt. Rời đi (đăng xuất) thì ngừng
-/// lắng nghe và xoá dữ liệu trong bộ nhớ.
+/// Khung điều hướng 4 tab của Customer.
 class CustomerShell extends StatefulWidget {
   const CustomerShell({super.key});
 
@@ -55,27 +51,23 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
     _doctors = context.read<DoctorsController>()..start();
     _busySlots = context.read<BusySlotsController>()
       ..start(AppDateUtils.dayOnly(_appointments.now));
-    // Thông báo / nhắc lịch: nghe chính danh sách lịch của khách; bấm thông báo -> mở đúng lịch.
     _alerts = context.read<CustomerAlertsController>();
     _openSub = _alerts.openRequests.listen(_openAppointment);
     unawaited(_alerts.start(userId, _appointments));
     WidgetsBinding.instance.addObserver(this);
-    // Mỗi phút tính lại theo giờ hiện tại: khung vừa tới giờ thành "đã qua",
-    // lịch vừa tới giờ rời khỏi "sắp tới".
     _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) => _appointments.refreshClock());
   }
 
-  /// Mở lại app từ nền -> tính lại theo giờ hiện tại (VD đã sang ngày mới).
+  /// Mở lại app từ nền.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     _appointments.refreshClock();
-    unawaited(_alerts.refreshSystemStatus()); // có thể vừa bật / tắt thông báo trong Cài đặt
-    // Vừa bấm liên kết xác minh email khôi phục trong ứng dụng email -> tiếp tục phiên ngầm.
+    unawaited(_alerts.refreshSystemStatus());
     context.read<AuthController>().checkPendingRecovery();
   }
 
-  /// Bấm vào thông báo lịch hẹn -> sang tab Lịch hẹn và mở Chi tiết của đúng lịch đó.
+  /// Bấm vào thông báo lịch hẹn.
   void _openAppointment(String appointmentId) {
     if (!mounted) return;
     _nav.selectTab(CustomerNavController.appointmentsTab);
@@ -94,7 +86,7 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
     WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
     _openSub?.cancel();
-    _alerts.stop(); // đăng xuất -> huỷ lời nhắc của tài khoản này
+    _alerts.stop();
     _appointments.stop();
     _doctors.stop();
     _busySlots.stop();
@@ -107,7 +99,6 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
     return ChangeNotifierProvider<CustomerNavController>.value(
       value: _nav,
       child: ListenableBuilder(
-        // Nghe cả lịch hẹn để chấm số "sắp tới" trên tab Lịch hẹn luôn khớp dữ liệu.
         listenable: Listenable.merge([_nav, _appointments]),
         builder: (context, _) => Scaffold(
           body: IndexedStack(index: _nav.index, children: _pages),
@@ -173,7 +164,7 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
     );
   }
 
-  /// Số lịch sắp tới – cùng hàm tính với Trang chủ và tab Cá nhân nên luôn bằng nhau.
+  /// Số lịch sắp tới.
   int get _upcomingCount =>
       CustomerHomeSummary.from(_appointments.items, _appointments.now).upcomingTotal;
 
@@ -181,7 +172,7 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
       states.contains(WidgetState.selected) ? AppColors.primary : AppColors.textSecondary;
 }
 
-/// Chấm số lịch sắp tới trên icon tab Lịch hẹn; ẩn khi không có.
+/// Chấm số lịch sắp tới trên icon tab Lịch hẹn.
 class _UpcomingBadge extends StatelessWidget {
   const _UpcomingBadge({required this.count, required this.child});
 

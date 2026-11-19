@@ -18,11 +18,7 @@ import '../widgets/customer_cancel.dart';
 import '../widgets/status_chip.dart';
 import 'customer_appointment_detail_screen.dart';
 
-/// Tab "Lịch hẹn" của Customer (lich_hen.txt): lịch hẹn của CHÍNH khách hàng, chia 3 nhóm
-/// Sắp tới / Đã qua / Đã hủy; xem chi tiết và hủy lịch.
-///
-/// Màn này KHÔNG giữ lịch hẹn riêng: đọc `AppointmentsController.items` (cùng danh sách với
-/// Trang chủ và tab Cá nhân) rồi phân nhóm bằng hàm thuần Dart [customerAppointments].
+/// Tab "Lịch hẹn" của Customer.
 class CustomerAppointmentsScreen extends StatefulWidget {
   const CustomerAppointmentsScreen({super.key});
 
@@ -153,8 +149,6 @@ class _CustomerAppointmentsScreenState extends State<CustomerAppointmentsScreen>
       );
     }
 
-    // Danh sách có tiêu đề ngày (lich_hen.txt 5.3): Hôm nay / Ngày mai / thứ, ngày.
-    // Các lịch đã được sắp xếp nên lịch cùng ngày luôn đứng liền nhau.
     final rows = <({DateTime? header, Appointment? item})>[];
     for (var i = 0; i < items.length; i++) {
       final a = items[i];
@@ -265,8 +259,7 @@ class _FilterButton extends StatelessWidget {
   }
 }
 
-/// Thẻ một lịch hẹn của khách: ô ngày, bác sĩ, dịch vụ, giờ, phòng, trạng thái, mã lịch
-/// và nút Hủy lịch (nếu còn hủy được).
+/// Thẻ một lịch hẹn của khách.
 class _AppointmentCard extends StatelessWidget {
   const _AppointmentCard({
     required this.appointment,
@@ -349,7 +342,6 @@ class _AppointmentCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            // Wrap: chữ to / màn hẹp thì nút Hủy tự xuống dòng thay vì tràn.
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               crossAxisAlignment: WrapCrossAlignment.center,
@@ -376,7 +368,6 @@ class _AppointmentCard extends StatelessWidget {
                   ),
               ],
             ),
-            // Lịch chờ xác nhận đã quá giờ mà chưa được duyệt (lich_hen.txt 3.2).
             if (group == CustomerAppointmentFilter.past &&
                 a.status == AppointmentStatus.pending) ...[
               const SizedBox(height: 8),
@@ -386,7 +377,6 @@ class _AppointmentCard extends StatelessWidget {
                 style: const TextStyle(fontSize: 12.5, color: AppColors.warningDark),
               ),
             ],
-            // Lịch sắp tới nhưng đã sát giờ -> giải thích vì sao không có nút Hủy.
             if (group == CustomerAppointmentFilter.upcoming && blocked != null) ...[
               const SizedBox(height: 8),
               Text(
@@ -436,7 +426,6 @@ class DateBlock extends StatelessWidget {
               color: AppColors.primaryDark,
             ),
           ),
-          // Khác năm hiện tại (đặt lịch sang năm sau / lịch cũ năm trước) -> ghi thêm năm.
           if (date.year != now.year)
             Text(
               '${date.year}',

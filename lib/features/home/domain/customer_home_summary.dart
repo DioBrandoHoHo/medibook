@@ -1,8 +1,7 @@
 import '../../appointments/domain/entities/appointment.dart';
 import '../../appointments/domain/entities/appointment_status.dart';
 
-/// Số liệu Trang chủ + tab Cá nhân của Customer, TÍNH từ danh sách lịch hẹn của chính
-/// khách hàng (trang_chu.txt phần 2). Không có con số nào được lưu riêng.
+/// Số liệu Trang chủ + tab Cá nhân của Customer.
 class CustomerHomeSummary {
   const CustomerHomeSummary({
     required this.upcoming,
@@ -13,10 +12,10 @@ class CustomerHomeSummary {
   /// Mọi lịch còn hiệu lực chưa tới giờ, tăng dần theo thời gian.
   final List<Appointment> upcoming;
 
-  /// Trong số sắp tới: đang chờ nhân viên xác nhận.
+  /// Số lịch sắp tới đang chờ xác nhận.
   final int upcomingPending;
 
-  /// Trong số sắp tới: đã được xác nhận.
+  /// Số lịch sắp tới đã xác nhận.
   final int upcomingConfirmed;
 
   int get upcomingTotal => upcoming.length;

@@ -4,8 +4,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/entities/time_slot.dart';
 
-/// Màu + nhãn của từng trạng thái khung giờ (lich_lam_viec.txt 2.2), dùng chung cho
-/// ô khung giờ và phần chú thích.
+/// Màu + nhãn của từng trạng thái khung giờ.
 class SlotStyle {
   const SlotStyle({
     required this.background,

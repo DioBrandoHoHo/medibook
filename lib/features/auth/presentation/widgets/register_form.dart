@@ -12,11 +12,11 @@ import 'auth_form_parts.dart';
 import 'password_field.dart';
 import 'password_rules_checklist.dart';
 
-/// Form Đăng ký Customer (Mục 4): họ tên, SĐT, mật khẩu, xác nhận mật khẩu.
+/// Form Đăng ký Customer.
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key, this.initialPhone = '', this.onPhoneChanged, this.onGoToLogin});
 
-  /// SĐT đang gõ ở chế độ kia (giữ lại khi chuyển Đăng nhập -> Đăng ký).
+  /// SĐT đang gõ ở chế độ Đăng nhập.
   final String initialPhone;
   final ValueChanged<String>? onPhoneChanged;
 
@@ -48,7 +48,6 @@ class _RegisterFormState extends State<RegisterForm> {
 
   void _onPasswordChanged(String value) {
     setState(() => _rules = PasswordRules.check(value));
-    // Sửa mật khẩu chính cũng phải cập nhật lỗi "không khớp" ở ô xác nhận (Mục 4.3).
     if (_confirm.text.isNotEmpty) _confirmKey.currentState?.validate();
     context.read<AuthController>().clearErrors();
   }
@@ -65,7 +64,7 @@ class _RegisterFormState extends State<RegisterForm> {
       password: _password.text,
     );
     if (!mounted || !ok) return;
-    TextInput.finishAutofillContext(); // cho trình quản lý mật khẩu lưu tài khoản mới
+    TextInput.finishAutofillContext();
     context.go(RouteGuard.afterAuth(auth.currentUser!));
   }
 

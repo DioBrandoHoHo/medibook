@@ -6,12 +6,6 @@ import 'entities/time_slot.dart';
 import 'work_shift.dart';
 
 /// Tính các khung giờ của MỘT bác sĩ trong MỘT buổi của ngày [day].
-///
-/// Hàm thuần Dart: đầu vào là danh sách lịch hẹn chung của app (cùng danh sách với
-/// Tổng quan và Lịch đặt), nên trạng thái khung luôn khớp với các tab đó.
-/// - Lịch Đã hủy / Đã từ chối không chiếm khung.
-/// - Lịch chiếm mọi khung mà thời gian của nó giao với khung (kể cả lịch lệch lưới 30 phút).
-/// - Có cả lịch Đã xác nhận và Chờ xác nhận -> hiện Đã xác nhận, đánh dấu trùng lịch.
 List<TimeSlot> buildSlots({
   required String doctorId,
   required DateTime day,
@@ -39,7 +33,6 @@ TimeSlot _slotAt(DateTime start, List<Appointment> mine, DateTime now) {
       state: end.isAfter(now) ? SlotState.free : SlotState.past,
     );
   }
-  // Ưu tiên hiển thị lịch đã xác nhận.
   final shown = overlapping.firstWhere(
     (a) => a.status == AppointmentStatus.confirmed,
     orElse: () => overlapping.first,
@@ -53,7 +46,7 @@ TimeSlot _slotAt(DateTime start, List<Appointment> mine, DateTime now) {
   );
 }
 
-/// Số khung theo trạng thái (để hiện nhãn "Trống X/8" và thẻ tổng hợp của ngày).
+/// Số khung theo trạng thái.
 class SlotSummary {
   const SlotSummary({
     required this.free,
@@ -105,8 +98,7 @@ List<TimeSlot> buildDaySlots({
         ),
     ];
 
-/// Lọc bác sĩ ở tab Lịch làm việc: theo chuyên khoa [specialty] (`null` = tất cả) và từ khoá
-/// [query] khớp tên, chuyên khoa hoặc phòng (không phân biệt hoa thường / dấu). Giữ thứ tự gốc.
+/// Lọc bác sĩ ở tab Lịch làm việc.
 List<Doctor> filterScheduleDoctors(
   List<Doctor> doctors, {
   String query = '',

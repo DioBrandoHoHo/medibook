@@ -13,10 +13,9 @@ import 'features/profile/data/repositories/firebase_profile_repository.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    // Android đọc cấu hình từ android/app/google-services.json.
     await Firebase.initializeApp();
   } catch (_) {
-    // Chưa cấu hình Firebase -> hiện màn hướng dẫn thay vì crash.
+    // Chưa cấu hình Firebase
     runApp(const FirebaseSetupApp());
     return;
   }

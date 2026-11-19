@@ -1,6 +1,6 @@
 /// Tiện ích văn bản phục vụ tìm kiếm và hiển thị.
 abstract final class TextUtils {
-  /// Số tiền VND có dấu chấm ngăn cách hàng nghìn. VD: 150000 -> "150.000 đ".
+  /// Số tiền VND có dấu chấm ngăn cách hàng nghìn.
   static String money(int amount) {
     final digits = amount.abs().toString();
     final buffer = StringBuffer(amount < 0 ? '-' : '');
@@ -27,7 +27,6 @@ abstract final class TextUtils {
   };
 
   /// Chữ thường, bỏ dấu tiếng Việt, bỏ khoảng trắng thừa.
-  /// VD: "  Nguyễn Thị MAI " -> "nguyen thi mai". Nhờ vậy gõ "mai" hay "Mai" đều tìm ra.
   static String normalize(String input) => input
       .toLowerCase()
       .split('')

@@ -6,7 +6,6 @@ import '../../domain/entities/app_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
 
 /// Danh sách thông báo của Staff + số chưa đọc (hiện trên chuông).
-/// Lưu ý: số chưa đọc KHÁC số lịch đang chờ xác nhận.
 class NotificationsController extends ChangeNotifier {
   NotificationsController(this._repository);
 
@@ -19,7 +18,7 @@ class NotificationsController extends ChangeNotifier {
   List<AppNotification> get items => _items;
   bool get hasError => _hasError;
 
-  /// Số thông báo chưa đọc – luôn đếm từ danh sách, không lưu riêng.
+  /// Số thông báo chưa đọc.
   int get unreadCount => _items.where((n) => !n.isRead).length;
 
   void start() {
@@ -50,7 +49,7 @@ class NotificationsController extends ChangeNotifier {
     _hasError = false;
   }
 
-  /// Đánh dấu một thông báo đã đọc. Lỗi mạng không làm app dừng.
+  /// Đánh dấu một thông báo đã đọc.
   Future<void> markRead(String id) => _markRead([id]);
 
   Future<void> markAllRead() =>

@@ -7,10 +7,7 @@ import '../../../../core/utils/name_utils.dart';
 import '../../../../core/widgets/state_views.dart';
 import '../../domain/avatar_image.dart';
 
-/// Ảnh đại diện của NGƯỜI DÙNG ĐANG ĐĂNG NHẬP: có ảnh thì hiện ảnh, chưa có (hoặc dữ liệu hỏng)
-/// thì hiện chữ cái đầu của tên như trước. Mọi nơi hiển thị ảnh của chính mình (thẻ tài khoản,
-/// phần đầu Trang chủ của Nhân viên và Khách hàng, màn Cập nhật thông tin) dùng widget này với
-/// `AuthController.currentUser.avatar` -> đổi ảnh một lần là mọi nơi đổi theo.
+/// Ảnh đại diện của NGƯỜI DÙNG ĐANG ĐĂNG NHẬP.
 class UserAvatar extends StatefulWidget {
   const UserAvatar({
     super.key,
@@ -22,7 +19,7 @@ class UserAvatar extends StatefulWidget {
 
   final String name;
 
-  /// Chuỗi base64 đã lưu (`AppUser.avatar`); rỗng = chưa có ảnh.
+  /// Chuỗi base64 đã lưu.
   final String avatar;
   final double radius;
   final Color background;
@@ -44,7 +41,6 @@ class _UserAvatarState extends State<UserAvatar> {
   @override
   void didUpdateWidget(UserAvatar old) {
     super.didUpdateWidget(old);
-    // Chỉ giải mã lại khi ảnh thật sự đổi – tránh nháy ảnh mỗi lần dựng lại.
     if (old.avatar != widget.avatar) _decode();
   }
 
@@ -68,7 +64,6 @@ class _UserAvatarState extends State<UserAvatar> {
       radius: widget.radius,
       backgroundColor: widget.background,
       backgroundImage: image,
-      // Ảnh lỗi khi vẽ (rất hiếm) -> không crash, chỉ còn nền.
       onBackgroundImageError: (_, _) {},
     );
   }

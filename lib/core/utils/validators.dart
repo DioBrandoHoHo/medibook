@@ -3,7 +3,7 @@ import 'app_date_utils.dart';
 import 'name_utils.dart';
 import 'phone_utils.dart';
 
-/// Trạng thái từng điều kiện mật khẩu (Mục 4.2) – UI dùng để hiển thị checklist.
+/// Trạng thái từng điều kiện mật khẩu.
 class PasswordRules {
   const PasswordRules({
     required this.hasMinLength,
@@ -16,7 +16,7 @@ class PasswordRules {
         hasMinLength: password.length >= minLength,
         hasUppercase: RegExp('[A-Z]').hasMatch(password),
         hasDigit: RegExp('[0-9]').hasMatch(password),
-        // Ký tự đặc biệt: mọi ký tự không phải chữ cái, chữ số hay khoảng trắng.
+        // Ký tự đặc biệt
         hasSpecialChar: RegExp(r'[^A-Za-z0-9\s]').hasMatch(password),
       );
 
@@ -31,17 +31,15 @@ class PasswordRules {
 }
 
 /// Các hàm validate trả về `null` khi hợp lệ, hoặc thông báo lỗi.
-/// Dùng trực tiếp làm `validator` của TextFormField.
 abstract final class Validators {
   static const fullNameMinLength = 2;
   static const fullNameMaxLength = 50;
 
-  /// Chữ cái mọi ngôn ngữ (kể cả tiếng Việt có dấu, dấu tổ hợp), khoảng trắng, ' - .
+  /// Ký tự hợp lệ của họ tên.
   static final _nameChars = RegExp(r"^[\p{L}\p{M}\s'.\-]+$", unicode: true);
   static final _hasLetter = RegExp(r'\p{L}', unicode: true);
 
-  /// Họ tên (Đăng ký + Cập nhật thông tin): bắt buộc; sau khi bỏ khoảng trắng thừa dài
-  /// 2–50 ký tự; chỉ gồm chữ cái, khoảng trắng và ' - . (không số, không ký hiệu khác).
+  /// Họ tên.
   static String? fullName(String? value) {
     if (value == null || value.trim().isEmpty) return AppStrings.errFullNameRequired;
     final name = NameUtils.normalize(value);
@@ -63,7 +61,7 @@ abstract final class Validators {
   static final _email = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]{2,}$');
   static const emailMaxLength = 100;
 
-  /// Email liên hệ: KHÔNG bắt buộc; nếu nhập thì phải đúng định dạng.
+  /// Email liên hệ.
   static String? optionalEmail(String? value) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return null;
@@ -71,14 +69,13 @@ abstract final class Validators {
     return null;
   }
 
-  /// Email khôi phục mật khẩu: BẮT BUỘC và phải đúng định dạng.
+  /// Email khôi phục mật khẩu.
   static String? requiredEmail(String? value) {
     if (value == null || value.trim().isEmpty) return AppStrings.errEmailRequired;
     return optionalEmail(value);
   }
 
-  /// Ngày sinh dd/mm/yyyy: KHÔNG bắt buộc; nếu nhập phải là ngày có thật,
-  /// không ở tương lai và không quá 120 năm trước [now].
+  /// Ngày sinh dd/mm/yyyy.
   static String? optionalBirthDate(String? value, DateTime now) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return null;
@@ -91,7 +88,7 @@ abstract final class Validators {
     return null;
   }
 
-  /// Mật khẩu mới ở màn Đổi mật khẩu: đủ 4 điều kiện và khác mật khẩu hiện tại.
+  /// Mật khẩu mới ở màn Đổi mật khẩu.
   static String? changedPassword(String? value, String currentPassword) {
     final error = newPassword(value);
     if (error != null) return error;
@@ -99,13 +96,13 @@ abstract final class Validators {
     return null;
   }
 
-  /// Dùng cho màn Đăng nhập: chỉ bắt buộc nhập, không kiểm tra quy tắc.
+  /// Dùng cho màn Đăng nhập.
   static String? loginPassword(String? value) {
     if (value == null || value.isEmpty) return AppStrings.errPasswordRequired;
     return null;
   }
 
-  /// Dùng cho màn Đăng ký: phải đạt đủ 4 điều kiện.
+  /// Dùng cho màn Đăng ký.
   static String? newPassword(String? value) {
     if (value == null || value.isEmpty) return AppStrings.errPasswordRequired;
     if (!PasswordRules.check(value).allPassed) return AppStrings.errPasswordRules;

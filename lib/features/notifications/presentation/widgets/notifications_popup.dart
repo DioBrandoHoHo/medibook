@@ -10,21 +10,21 @@ import '../../../appointments/presentation/screens/appointment_detail_screen.dar
 import '../../domain/entities/app_notification.dart';
 import '../controllers/notifications_controller.dart';
 
-/// POPUP danh sách thông báo (đặc tả yêu cầu popup, không phải màn hình riêng).
+/// POPUP danh sách thông báo.
 class NotificationsPopup extends StatelessWidget {
   const NotificationsPopup({super.key});
 
   static Future<void> show(BuildContext context) =>
       showDialog<void>(context: context, builder: (_) => const NotificationsPopup());
 
-  /// Mở thông báo: đánh dấu đã đọc, rồi mở lịch hẹn liên quan (nếu còn tồn tại).
+  /// Mở thông báo.
   void _open(BuildContext context, AppNotification n) {
     context.read<NotificationsController>().markRead(n.id);
     final appointmentId = n.appointmentId;
     if (appointmentId == null) return;
     if (context.read<AppointmentsController>().byId(appointmentId) == null) return;
     final navigator = Navigator.of(context);
-    navigator.pop(); // đóng popup
+    navigator.pop();
     navigator.push(
       MaterialPageRoute<void>(
         builder: (_) => AppointmentDetailScreen(appointmentId: appointmentId),
@@ -113,7 +113,6 @@ class _NotificationRow extends StatelessWidget {
       key: ValueKey('notification_${n.id}'),
       onTap: onTap,
       child: Container(
-        // Thông báo chưa đọc có nền xanh nhạt + chấm xanh.
         color: n.isRead ? null : AppColors.primaryLight.withValues(alpha: 0.5),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

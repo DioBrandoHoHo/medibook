@@ -7,12 +7,11 @@ import 'package:timezone/timezone.dart' as tz;
 import '../../../core/constants/app_strings.dart';
 
 /// Thông báo của hệ điều hành trên điện thoại (hiện ngay + hẹn giờ).
-/// Tách thành interface để test thay bằng bản giả.
 abstract interface class LocalNotifications {
-  /// Xin quyền hiển thị thông báo (Android 13+ hiện hộp thoại hệ thống). `true` = được phép.
+  /// Xin quyền hiển thị thông báo.
   Future<bool> requestPermission();
 
-  /// Người dùng có đang cho phép thông báo không (có thể đã tắt trong Cài đặt).
+  /// Người dùng có đang cho phép thông báo không.
   Future<bool> isEnabled();
 
   Future<void> show({
@@ -35,7 +34,7 @@ abstract interface class LocalNotifications {
   /// Payload của thông báo người dùng vừa bấm khi app đang chạy.
   Stream<String> get taps;
 
-  /// Payload của thông báo đã MỞ app (app đang tắt hẳn); đọc một lần.
+  /// Payload của thông báo đã mở app.
   Future<String?> takeLaunchPayload();
 }
 
@@ -65,7 +64,7 @@ class PluginLocalNotifications implements LocalNotifications {
   AndroidFlutterLocalNotificationsPlugin? get _android =>
       _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
-  /// Khởi tạo một lần, lần gọi đầu tiên. Lỗi khởi tạo không làm app dừng (thông báo chỉ là phụ).
+  /// Khởi tạo một lần, lần gọi đầu tiên.
   Future<bool> _init() => _ready ??= () async {
         if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return false;
         try {
@@ -138,10 +137,8 @@ class PluginLocalNotifications implements LocalNotifications {
         title: title,
         body: body,
         payload: payload,
-        // Thời điểm tuyệt đối (UTC) -> không phụ thuộc múi giờ của máy.
         scheduledDate: tz.TZDateTime.from(at.toUtc(), tz.UTC),
         notificationDetails: _details,
-        // Không cần quyền "báo thức chính xác"; hệ điều hành có thể dời vài phút để tiết kiệm pin.
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     } catch (_) {}

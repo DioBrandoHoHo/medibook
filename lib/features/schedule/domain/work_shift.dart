@@ -1,9 +1,9 @@
-/// Buổi làm việc (lich_lam_viec.txt 2.1). Giờ làm việc được khai báo DUY NHẤT ở đây.
+/// Buổi làm việc.
 enum WorkShift {
-  /// Sáng 07:30 – 11:30.
+  /// Sáng 07:30.
   morning(startHour: 7, startMinute: 30, endHour: 11, endMinute: 30),
 
-  /// Chiều 13:30 – 17:30.
+  /// Chiều 13:30.
   afternoon(startHour: 13, startMinute: 30, endHour: 17, endMinute: 30);
 
   const WorkShift({
@@ -35,8 +35,7 @@ enum WorkShift {
     return starts;
   }
 
-  /// Buổi nên mở sẵn khi xem ngày [day] tại thời điểm [now]:
-  /// đang xem hôm nay và đã hết buổi sáng -> Chiều; còn lại -> Sáng.
+  /// Buổi nên mở sẵn khi xem ngày [day] tại thời điểm [now].
   static WorkShift defaultFor(DateTime day, DateTime now) {
     final isToday = day.year == now.year && day.month == now.month && day.day == now.day;
     return isToday && !now.isBefore(morning.endOn(day)) ? afternoon : morning;

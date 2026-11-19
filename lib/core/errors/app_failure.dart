@@ -1,7 +1,6 @@
 import '../constants/app_strings.dart';
 
-/// Lỗi nghiệp vụ/hạ tầng chuẩn hoá để UI hiển thị thông báo dễ hiểu,
-/// không lộ chi tiết kỹ thuật hay dữ liệu nhạy cảm.
+/// Lỗi nghiệp vụ/hạ tầng chuẩn hoá để UI hiển thị thông báo dễ hiểu.
 sealed class AppFailure implements Exception {
   const AppFailure(this.message);
   final String message;

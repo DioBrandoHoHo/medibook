@@ -8,9 +8,7 @@ import '../../../../core/utils/validators.dart';
 import '../controllers/auth_controller.dart';
 import '../widgets/auth_form_parts.dart';
 
-/// Màn "Quên mật khẩu" (dang_ky_dang_nhap.txt – phần bổ sung): nhập SĐT -> hệ thống gửi liên kết
-/// đặt lại mật khẩu tới email khôi phục ĐÃ xác minh của tài khoản.
-/// Mật khẩu mới được đặt trên trang của Firebase; app không nhận hay lưu mật khẩu ở bước này.
+/// Màn "Quên mật khẩu".
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key, this.initialPhone = ''});
 
@@ -35,7 +33,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String? _phoneError;
   String? _generalError;
 
-  /// Email (đã che bớt) vừa được gửi liên kết. Khác null = đã gửi xong.
+  /// Email (đã che bớt) vừa được gửi liên kết.
   String? _sentTo;
 
   @override

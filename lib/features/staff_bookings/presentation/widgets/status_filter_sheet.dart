@@ -6,14 +6,12 @@ import '../../../appointments/domain/entities/appointment_status.dart';
 import '../../../appointments/presentation/widgets/status_chip.dart';
 
 /// Bảng chọn "Lọc theo trạng thái" của màn Lịch đặt (bộ lọc nâng cao).
-/// Trả về tập trạng thái đã chọn, hoặc `null` nếu người dùng đóng bảng mà không áp dụng.
 class StatusFilterSheet extends StatefulWidget {
   const StatusFilterSheet({super.key, required this.initial, this.counts});
 
   final Set<AppointmentStatus> initial;
 
-  /// Số lịch của từng trạng thái (trong bộ lọc chính đang chọn) để hiện cạnh mỗi lựa chọn.
-  /// `null` -> chỉ hiện tên trạng thái.
+  /// Số lịch của từng trạng thái.
   final Map<AppointmentStatus, int>? counts;
 
   static Future<Set<AppointmentStatus>?> show(
@@ -25,7 +23,6 @@ class StatusFilterSheet extends StatefulWidget {
       context: context,
       backgroundColor: Colors.white,
       showDragHandle: true,
-      // Cao theo nội dung (không bị giới hạn 9/16 màn hình) để không tràn khi nhãn dài / chữ to.
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -39,7 +36,6 @@ class StatusFilterSheet extends StatefulWidget {
 }
 
 class _StatusFilterSheetState extends State<StatusFilterSheet> {
-  // Thứ tự hiển thị theo bảng trạng thái trong đặc tả.
   static const _order = [
     AppointmentStatus.pending,
     AppointmentStatus.confirmed,

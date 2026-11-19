@@ -3,26 +3,18 @@ import 'dart:typed_data';
 
 import 'package:image/image.dart' as img;
 
-/// Xử lý ảnh đại diện trước khi lưu – hàm thuần Dart (không phụ thuộc Flutter / Firebase).
-///
-/// Lựa chọn kỹ thuật:
-/// - Cắt VUÔNG ở giữa ảnh (ảnh đại diện luôn hiển thị trong khung tròn), xoay đúng chiều theo EXIF.
-/// - Thu về [outputSize] x [outputSize] px: đủ nét cho khung lớn nhất trong app (đường kính
-///   ~80dp ở màn hình 3x = 240px) mà vẫn nhỏ.
-/// - JPEG chất lượng [jpegQuality]: ảnh 256px thường chỉ 15–35 KB, base64 ~20–45 KB – nhỏ hơn
-///   nhiều giới hạn 1 MB của một document Firestore và giới hạn [maxEncodedLength] trong Rules.
+/// Xử lý ảnh đại diện trước khi lưu.
 abstract final class AvatarImage {
   static const outputSize = 256;
   static const jpegQuality = 82;
 
-  /// Ảnh gốc lớn hơn mức này bị từ chối ngay (tránh giải mã ảnh khổng lồ gây treo / hết bộ nhớ).
+  /// Kích thước tối đa của ảnh gốc.
   static const maxInputBytes = 20 * 1024 * 1024;
 
-  /// Phải khớp `UserModel.maxAvatarLength` và Security Rules.
+  /// Độ dài tối đa của chuỗi ảnh.
   static const maxEncodedLength = 200000;
 
-  /// Ảnh gốc -> chuỗi base64 của JPEG vuông đã nén. Ném [AvatarImageException] nếu ảnh quá lớn
-  /// hoặc không đọc được (định dạng không hỗ trợ, file hỏng).
+  /// Ảnh gốc -> chuỗi base64 của JPEG vuông đã nén.
   static String process(Uint8List bytes) {
     if (bytes.isEmpty) throw const AvatarImageException(AvatarImageError.unsupported);
     if (bytes.length > maxInputBytes) {
@@ -61,7 +53,7 @@ abstract final class AvatarImage {
     return encoded;
   }
 
-  /// Giải mã chuỗi đã lưu để hiển thị. Chuỗi hỏng -> `null` (giao diện quay về chữ cái đầu).
+  /// Giải mã chuỗi đã lưu để hiển thị.
   static Uint8List? decode(String avatar) {
     if (avatar.isEmpty) return null;
     try {

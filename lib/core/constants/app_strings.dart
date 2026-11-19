@@ -1,11 +1,11 @@
-/// Chuỗi hiển thị dùng chung. Các thông báo có ghi chú "đặc tả" phải giữ NGUYÊN VĂN.
+/// Chuỗi hiển thị dùng chung.
 abstract final class AppStrings {
   static const appName = 'MediBook';
 
   // Welcome
   static const welcomeEyebrow = 'JUST TWO CLICKS*';
-  static const welcomeTagline = 'Book your Doctor any Time, anywhere.'; // đặc tả
-  static const startBooking = 'Bắt đầu'; // đặc tả ghi "Bắt đầu đặt lịch" – người dùng đã duyệt rút gọn
+  static const welcomeTagline = 'Book your Doctor any Time, anywhere.';
+  static const startBooking = 'Bắt đầu';
 
   // Tabs
   static const tabHome = 'Trang chủ';
@@ -14,10 +14,10 @@ abstract final class AppStrings {
   static const tabProfile = 'Cá nhân';
   static const tabStaffBookings = 'Lịch đặt';
   static const tabSchedule = 'Lịch làm việc';
-  static const tabOverview = 'Tổng quan'; // tab đầu của Staff (trang_chu.txt 2.5)
-  static const tabAccount = 'Tài khoản'; // tab cuối của Staff (trang_chu.txt 2.5)
+  static const tabOverview = 'Tổng quan';
+  static const tabAccount = 'Tài khoản';
 
-  // Trang chủ Staff (trang_chu.txt)
+  // Trang chủ Staff
   static const slogan = 'Vì sức khỏe của bạn';
   static const notifications = 'Thông báo';
   static const todayOverview = 'Tổng quan hôm nay';
@@ -28,8 +28,8 @@ abstract final class AppStrings {
   static const statPending = 'Chờ xác nhận';
   static const statConfirmed = 'Đã xác nhận';
   static const statCancelledRejected = 'Đã hủy / Từ chối';
-  static String pendingNotice(int count) => 'Có $count lịch đặt mới cần xử lý'; // đặc tả 2.3
-  static const noPendingNotice = 'Không có lịch đặt cần xử lý'; // đặc tả 2.3
+  static String pendingNotice(int count) => 'Có $count lịch đặt mới cần xử lý';
+  static const noPendingNotice = 'Không có lịch đặt cần xử lý';
   static const upcomingTitle = 'Lịch hẹn sắp diễn ra';
   static const seeAll = 'Xem tất cả';
   static const upcomingEmpty = 'Chưa có lịch hẹn nào sắp diễn ra';
@@ -56,10 +56,10 @@ abstract final class AppStrings {
   static const statusRejected = 'Đã từ chối';
   static const statusCancelled = 'Đã hủy';
 
-  // Lịch đặt (lich_dat.txt)
+  // Lịch đặt
   static const filterAll = 'Tất cả';
   static const filterToday = 'Hôm nay';
-  static const bookingsEmptyAll = 'Chưa có lịch đặt nào'; // đặc tả mục 5
+  static const bookingsEmptyAll = 'Chưa có lịch đặt nào';
   static const bookingsEmptyToday = 'Hôm nay chưa có lịch đặt nào';
   static const bookingsEmptyPending = 'Không có lịch đặt nào đang chờ xác nhận';
   static const bookingsEmptyFiltered = 'Không tìm thấy lịch đặt phù hợp';
@@ -119,19 +119,17 @@ abstract final class AppStrings {
   static const showPassword = 'Hiện mật khẩu';
   static const hidePassword = 'Ẩn mật khẩu';
 
-  // Quy tắc mật khẩu (đặc tả 4.2)
+  // Quy tắc mật khẩu
   static const ruleMinLength = 'Ít nhất 8 ký tự';
   static const ruleUppercase = 'Có ít nhất 1 chữ cái viết hoa (A–Z)';
   static const ruleDigit = 'Có ít nhất 1 chữ số (0–9)';
   static const ruleSpecial = 'Có ít nhất 1 ký tự đặc biệt (@, #, !, \$, %...)';
 
-  // Auth – lỗi theo đặc tả (giữ nguyên văn)
   static const errPhoneExists = 'Số điện thoại đã được đăng ký';
   static const errPhoneNotRegistered = 'Số điện thoại chưa được đăng ký';
   static const errWrongCredentials = 'Số điện thoại hoặc mật khẩu không chính xác';
   static const errPasswordMismatch = 'Mật khẩu xác nhận không khớp';
 
-  // Auth – lỗi kiểm tra đầu vào (đặc tả không quy định câu chữ)
   static const errFullNameRequired = 'Vui lòng nhập họ và tên';
   static const phoneHint = 'VD: 0912 345 678';
   static const loginWithThisPhone = 'Đăng nhập bằng số này';
@@ -152,7 +150,7 @@ abstract final class AppStrings {
   static const errAccountDataMissing =
       'Không tìm thấy dữ liệu tài khoản. Vui lòng liên hệ quản trị viên.';
 
-  // Profile prompt (đặc tả Mục 6)
+  // Profile prompt
   static const profilePromptQuestion = 'Bạn có muốn cập nhật thông tin cá nhân không?';
   static const yes = 'Có';
   static const later = 'Để sau';
@@ -166,7 +164,7 @@ abstract final class AppStrings {
   static const roleCustomer = 'Khách hàng';
   static const roleStaff = 'Nhân viên';
 
-  // Tab Lịch làm việc (lich_lam_viec.txt)
+  // Tab Lịch làm việc
   static const shiftMorning = 'Sáng';
   static const shiftAfternoon = 'Chiều';
   static const slotFree = 'Trống';
@@ -187,7 +185,7 @@ abstract final class AppStrings {
   static const scheduleSearchHint = 'Tìm bác sĩ, chuyên khoa, phòng';
   static const today = 'Hôm nay';
 
-  // Tab Tài khoản của Staff (thong_tin.txt)
+  // Tab Tài khoản của Staff
   static const accountTitle = 'Tài khoản';
   static const notUpdated = 'Chưa cập nhật';
 
@@ -196,7 +194,6 @@ abstract final class AppStrings {
   static const discardChanges = 'Bỏ thay đổi';
   static const keepEditing = 'Tiếp tục sửa';
 
-  // Thông báo / nhắc lịch cho khách hàng (lich_hen.txt – Phần bổ sung N)
   static const alertChannelName = 'Lịch hẹn khám';
   static const alertChannelDescription =
       'Báo khi phòng khám xác nhận / từ chối lịch và nhắc trước giờ khám';
@@ -218,7 +215,7 @@ abstract final class AppStrings {
   static String alertsUpcoming(int count) =>
       count == 0 ? 'Chưa có lời nhắc nào' : 'Đang hẹn $count lời nhắc';
 
-  // Ảnh đại diện (thong_tin.txt – Phần bổ sung A)
+  // Ảnh đại diện
   static const avatarTitle = 'Ảnh đại diện';
   static const avatarChange = 'Đổi ảnh đại diện';
   static const avatarPickGallery = 'Chọn ảnh từ thư viện';
@@ -266,7 +263,7 @@ abstract final class AppStrings {
   static const errSessionExpired = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
 
   // ===== KHU VỰC KHÁCH HÀNG =====
-  // Trang chủ (trang_chu.txt phần 2)
+  // Trang chủ
   static const customerWish = 'Hôm nay bạn muốn khám gì?';
   static const nextAppointment = 'Lịch hẹn sắp tới';
   static const noUpcoming = 'Bạn chưa có lịch hẹn nào sắp tới';
@@ -284,7 +281,7 @@ abstract final class AppStrings {
   static const notePendingCustomer = 'Đang chờ nhân viên xác nhận';
   static const noteConfirmedCustomer = 'Phòng khám đã xác nhận, vui lòng đến đúng giờ';
 
-  // Đặt lịch (dat_lich.txt)
+  // Đặt lịch
   static const bookingTitle = 'Đặt lịch khám';
   static const bookingSubtitle = 'Chọn thời gian mong muốn để xem bác sĩ còn trống';
   static const doctorSearchHint = 'Tìm bác sĩ, chuyên khoa';
@@ -305,7 +302,6 @@ abstract final class AppStrings {
   static const doctorsEmptyCustomer = 'Phòng khám chưa cập nhật danh sách bác sĩ';
   static const clearDoctorFilters = 'Xoá bộ lọc';
 
-  // Thông tin bác sĩ + đặt lịch
   static const doctorInfo = 'Thông tin bác sĩ';
   static const doctorNotFound = 'Không tìm thấy bác sĩ';
   static const about = 'Giới thiệu';
@@ -333,7 +329,7 @@ abstract final class AppStrings {
   static const errOwnOverlap = 'Bạn đã có lịch hẹn khác trong khung giờ này.';
   static const errNameMissing = 'Vui lòng cập nhật họ tên ở tab Cá nhân trước khi đặt lịch.';
 
-  // Chọn ngày theo tháng / năm (dat_lich.txt phần bổ sung C, 17/11/2026)
+  // Chọn ngày theo tháng / năm
   static const prevMonth = 'Tháng trước';
   static const nextMonth = 'Tháng sau';
   static const prevYear = 'Năm trước';
@@ -347,10 +343,10 @@ abstract final class AppStrings {
       'Khung $time của ngày này đã qua nên đã bỏ chọn giờ mong muốn.';
   static const viewAppointments = 'Xem lịch hẹn';
 
-  // Tab Cá nhân (thong_tin.txt phần 2)
+  // Tab Cá nhân
   static const personalTitle = 'Cá nhân';
 
-  // Tab Lịch hẹn của khách hàng (lich_hen.txt)
+  // Tab Lịch hẹn của khách hàng
   static const cFilterUpcoming = 'Sắp tới';
   static const cFilterPast = 'Đã qua';
   static const cFilterCancelled = 'Đã hủy';
@@ -374,7 +370,6 @@ abstract final class AppStrings {
   static const fieldSpecialty = 'Chuyên khoa';
   static const notifCancelledTitle = 'Lịch hẹn đã hủy';
 
-  // Quên mật khẩu + email khôi phục (dang_ky_dang_nhap.txt – phần bổ sung)
   static const forgotPassword = 'Quên mật khẩu?';
   static const forgotTitle = 'Quên mật khẩu';
   static const forgotIntro =

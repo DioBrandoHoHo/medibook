@@ -14,8 +14,7 @@ import '../../domain/repositories/profile_repository.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/user_avatar.dart';
 
-/// Cập nhật thông tin cá nhân (thong_tin.txt mục 4).
-/// Mọi trường được điền sẵn từ hồ sơ hiện có – họ tên & SĐT chính là dữ liệu lúc đăng ký.
+/// Cập nhật thông tin cá nhân.
 class ProfileEditScreen extends StatelessWidget {
   const ProfileEditScreen({super.key});
 
@@ -49,7 +48,7 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
   late final TextEditingController _birthDate;
   UserGender? _gender;
 
-  /// Giá trị lúc mở màn – để biết người dùng đã sửa gì chưa.
+  /// Giá trị lúc mở màn.
   late final String _initialName;
   late final String _initialEmail;
   late final String _initialBirth;
@@ -58,7 +57,7 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
   /// Chỉ hỏi khi màn được mở chồng lên một màn khác (có chỗ để quay lại).
   bool _canGuard = false;
 
-  /// Đã lưu xong / đã đồng ý bỏ thay đổi -> cho phép rời màn.
+  /// Đã lưu xong / đã đồng ý bỏ thay đổi.
   bool _allowPop = false;
 
   bool get _isDirty =>
@@ -145,10 +144,9 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
       gender: _gender,
     );
     if (!mounted || !ok) return;
-    setState(() => _allowPop = true); // đã lưu -> rời màn không cần hỏi
+    setState(() => _allowPop = true);
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text(AppStrings.profileSaved)));
-    // Mở từ tab Tài khoản / Cá nhân -> quay lại; mở từ bước hỏi hồ sơ -> vào trang chính theo vai trò.
     if (context.canPop()) {
       context.pop();
     } else {
@@ -159,7 +157,6 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<ProfileController>();
-    // Đang sửa dở mà quay lại -> hỏi "Bỏ thay đổi?" (chỉ khi mở từ tab Tài khoản / Cá nhân).
     return PopScope(
       canPop: !_canGuard || _allowPop || !_isDirty,
       onPopInvokedWithResult: (didPop, _) => _onPopBlocked(didPop),
@@ -176,7 +173,6 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
               children: [
                 Center(
-                  // Ảnh đã lưu (nếu có); chưa có ảnh thì chữ cái đầu đổi theo họ tên đang gõ.
                   child: UserAvatar(
                     name: _fullName.text,
                     avatar: context.watch<AuthController>().currentUser?.avatar ?? '',
@@ -208,7 +204,7 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
                         textCapitalization: TextCapitalization.words,
                         textInputAction: TextInputAction.next,
                         validator: Validators.fullName,
-                        onChanged: (_) => setState(() {}), // cập nhật chữ cái ảnh đại diện
+                        onChanged: (_) => setState(() {}),
                         decoration: const InputDecoration(
                           labelText: AppStrings.fullName,
                           prefixIcon: Icon(Icons.person_outline_rounded),
@@ -278,7 +274,6 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
                                 color: _gender == entry.key ? AppColors.primary : AppColors.border,
                               ),
                               shape: const StadiumBorder(),
-                              // Bấm lại lựa chọn đang chọn để bỏ chọn.
                               onSelected: (on) => setState(() => _gender = on ? entry.key : null),
                             ),
                         ],
@@ -306,7 +301,7 @@ class _ProfileEditViewState extends State<_ProfileEditView> {
   }
 }
 
-/// Tự chèn dấu "/" khi gõ ngày sinh: 15081995 -> 15/08/1995.
+/// Tự chèn dấu "/" khi gõ ngày sinh.
 class _DateInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {

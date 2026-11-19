@@ -12,11 +12,10 @@ import '../shells/staff_shell.dart';
 import 'app_routes.dart';
 import 'route_guard.dart';
 
-/// Cấu hình go_router. Mỗi khi phiên đăng nhập đổi, [refreshListenable] chạy lại redirect.
+/// Cấu hình go_router.
 GoRouter createAppRouter(AuthController auth) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
-    // Chỉ chạy lại redirect khi PHIÊN đổi (đăng nhập / đăng xuất), không phải khi sửa hồ sơ.
     refreshListenable: auth.sessionChanges,
     redirect: (context, state) => RouteGuard.redirect(state.matchedLocation, auth.currentUser),
     routes: [
@@ -54,7 +53,7 @@ GoRouter createAppRouter(AuthController auth) {
   );
 }
 
-/// Hiệu ứng chuyển trang: mờ dần + trượt nhẹ từ dưới lên.
+/// Hiệu ứng chuyển trang.
 CustomTransitionPage<void> _fadeSlide(GoRouterState state, Widget child) {
   return CustomTransitionPage<void>(
     key: state.pageKey,

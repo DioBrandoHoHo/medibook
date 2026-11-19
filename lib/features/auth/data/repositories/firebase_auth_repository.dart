@@ -10,21 +10,6 @@ import '../../domain/repositories/auth_repository.dart';
 import '../models/user_model.dart';
 
 /// Triển khai [AuthRepository] bằng Firebase Auth (Email/Password) + Cloud Firestore.
-///
-/// SĐT được chuẩn hoá rồi quy đổi sang email nội bộ `<sdt>@medibook.local`.
-/// - Trùng SĐT được Firebase Auth chặn ở phía server (email là duy nhất).
-/// - Vai trò đọc từ `users/{uid}.role`; Security Rules chỉ cho tự tạo role `customer`.
-///
-/// Quên mật khẩu (phương án "email khôi phục"): khi người dùng xác minh một email thật, email
-/// đăng nhập của tài khoản Firebase đổi từ `<sdt>@medibook.local` sang email đó – nhờ vậy
-/// Firebase gửi được liên kết đặt lại mật khẩu. Người dùng VẪN đăng nhập bằng SĐT: app tra
-/// `login_index/{sdt}` để biết email đăng nhập hiện tại.
-/// ```
-/// login_index/{phone}
-///   uid:       string
-///   emails:    [string]   // tối đa 2: email đã xác minh (nếu có) + email đang chờ xác minh
-///   updatedAt: timestamp
-/// ```
 class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({FirebaseAuth? auth, FirebaseFirestore? firestore})
       : _auth = auth ?? FirebaseAuth.instance,
@@ -44,7 +29,7 @@ class FirebaseAuthRepository implements AuthRepository {
   static bool _isInternalEmail(String? email) =>
       email == null || email.endsWith('@${PhoneUtils.authEmailDomain}');
 
-  /// Các email thật gắn với SĐT (theo `login_index`). `null` = SĐT chưa từng đặt email khôi phục.
+  /// Các email thật gắn với SĐT.
   Future<List<String>?> _indexedEmails(String phone) async {
     final snap = await _loginIndex(phone).get();
     final emails = snap.data()?['emails'];
@@ -53,8 +38,7 @@ class FirebaseAuthRepository implements AuthRepository {
     return result.isEmpty ? null : result;
   }
 
-  /// Như [_indexedEmails] nhưng lỗi (mất mạng...) coi như không có – dùng ở Đăng nhập / Đăng ký
-  /// để không làm hỏng luồng cũ.
+  /// Như [_indexedEmails] nhưng lỗi (mất mạng...) coi như không có.
   Future<List<String>?> _indexedEmailsOrNull(String phone) async {
     try {
       return await _indexedEmails(phone);
@@ -70,8 +54,6 @@ class FirebaseAuthRepository implements AuthRepository {
     required String password,
   }) async {
     final normalized = PhoneUtils.normalize(phone);
-    // SĐT đã có tài khoản dùng email khôi phục (email nội bộ không còn tồn tại nên Firebase
-    // không tự chặn được) -> vẫn phải báo trùng.
     if (await _indexedEmailsOrNull(normalized) != null) throw AuthFailure.phoneAlreadyRegistered;
     final UserCredential cred;
     try {
@@ -92,7 +74,6 @@ class FirebaseAuthRepository implements AuthRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } on FirebaseException catch (e) {
-      // Không ghi được hồ sơ -> xoá tài khoản Auth vừa tạo để người dùng đăng ký lại được.
       await _safeDeleteUser(user);
       throw _mapFirestoreError(e);
     }
@@ -117,8 +98,7 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
-  /// Đăng nhập bằng SĐT: thử email nội bộ trước (mọi tài khoản chưa đặt email khôi phục – luồng
-  /// cũ không đổi); không được thì tra `login_index` và thử các email thật của SĐT đó.
+  /// Đăng nhập bằng SĐT.
   Future<UserCredential> _signIn(String phone, String password) async {
     try {
       return await _auth.signInWithEmailAndPassword(
@@ -137,10 +117,8 @@ class FirebaseAuthRepository implements AuthRepository {
           if (e.code == 'too-many-requests' || e.code == 'network-request-failed') {
             throw _mapAuthError(e, isRegister: false);
           }
-          // Email này chưa phải email đăng nhập / sai mật khẩu -> thử email kế tiếp.
         }
       }
-      // SĐT có trong login_index nghĩa là ĐÃ đăng ký -> lỗi còn lại là sai mật khẩu.
       throw AuthFailure.wrongCredentials;
     }
   }
@@ -150,7 +128,7 @@ class FirebaseAuthRepository implements AuthRepository {
     var user = _auth.currentUser;
     if (user == null) throw AuthFailure.sessionExpired;
     try {
-      await user.reload(); // lấy email mới nhất (người dùng có thể vừa bấm liên kết xác minh)
+      await user.reload();
       user = _auth.currentUser;
     } on FirebaseAuthException catch (e) {
       if (e.code != 'network-request-failed') throw AuthFailure.sessionExpired;
@@ -181,8 +159,6 @@ class FirebaseAuthRepository implements AuthRepository {
       await user.reauthenticateWithCredential(
         EmailAuthProvider.credential(email: current, password: currentPassword),
       );
-      // Ghi bảng tra TRƯỚC khi gửi thư: nếu ghi sau mà thất bại, người dùng xác minh xong
-      // sẽ không đăng nhập lại được bằng SĐT.
       await _loginIndex(phone).set({
         'uid': user.uid,
         'emails': [if (!_isInternalEmail(current) && current != target) current, target],
@@ -227,7 +203,6 @@ class FirebaseAuthRepository implements AuthRepository {
         await _auth.sendPasswordResetEmail(email: email);
         return RecoveryEmail.mask(email);
       } on FirebaseAuthException catch (e) {
-        // user-not-found = email này chưa được xác minh (chưa phải email đăng nhập) -> thử tiếp.
         if (e.code == 'user-not-found' || e.code == 'invalid-email') continue;
         throw switch (e.code) {
           'too-many-requests' => AuthFailure.tooManyRequests,
@@ -241,20 +216,17 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<AppUser?> restoreSession() async {
-    // Chờ SDK nạp xong phiên đã lưu trên máy (sự kiện đầu tiên của authStateChanges).
     final user = await _auth.authStateChanges().first;
     if (user == null) return null;
     try {
       final snap = await _userDoc(user.uid).get();
       final map = snap.data();
       if (map == null) {
-        // Có tài khoản Auth nhưng không có hồ sơ -> không cho vào, xoá phiên.
         await _auth.signOut();
         return null;
       }
       return UserModel.fromMap(snap.id, map);
     } on FirebaseException catch (e) {
-      // Mất mạng và chưa có cache: giữ phiên, nhưng để người dùng vào từ màn Welcome.
       throw _mapFirestoreError(e);
     }
   }
@@ -271,7 +243,6 @@ class FirebaseAuthRepository implements AuthRepository {
     final email = user?.email;
     if (user == null || email == null) throw AuthFailure.sessionExpired;
     try {
-      // Bắt buộc xác thực lại bằng mật khẩu hiện tại trước khi đổi (Firebase kiểm tra phía server).
       await user.reauthenticateWithCredential(
         EmailAuthProvider.credential(email: email, password: currentPassword),
       );
@@ -302,7 +273,7 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
-  /// Chuyển mã lỗi Firebase thành thông báo theo đặc tả, không lộ chi tiết kỹ thuật.
+  /// Chuyển mã lỗi Firebase thành thông báo cho người dùng.
   static AppFailure _mapAuthError(FirebaseAuthException e, {required bool isRegister}) {
     switch (e.code) {
       case 'email-already-in-use':
@@ -312,8 +283,6 @@ class FirebaseAuthRepository implements AuthRepository {
       case 'wrong-password':
       case 'invalid-credential':
       case 'invalid-login-credentials':
-        // Lưu ý: khi bật "Email enumeration protection", Firebase trả invalid-credential
-        // cho CẢ trường hợp SĐT chưa đăng ký -> không phân biệt được (xem README).
         return AuthFailure.wrongCredentials;
       case 'too-many-requests':
         return AuthFailure.tooManyRequests;

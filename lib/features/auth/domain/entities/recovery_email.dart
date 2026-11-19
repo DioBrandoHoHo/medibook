@@ -1,18 +1,16 @@
-/// Trạng thái "email khôi phục mật khẩu" của tài khoản đang đăng nhập
-/// (dang_ky_dang_nhap.txt – phần bổ sung Quên mật khẩu).
+/// Trạng thái "email khôi phục mật khẩu" của tài khoản đang đăng nhập.
 class RecoveryEmail {
   const RecoveryEmail({this.verified, this.pending});
 
-  /// Email ĐÃ xác minh – nơi nhận liên kết đặt lại mật khẩu. `null` = chưa có.
+  /// Email ĐÃ xác minh.
   final String? verified;
 
-  /// Email đã yêu cầu nhưng CHƯA bấm liên kết xác minh. `null` = không có.
+  /// Email đã yêu cầu nhưng CHƯA bấm liên kết xác minh.
   final String? pending;
 
   bool get isSet => verified != null;
 
   /// Che bớt email khi hiển thị ở màn Quên mật khẩu (người lạ không đọc được trọn email).
-  /// VD: "nguyenbinh@gmail.com" -> "ng••••••••@gmail.com".
   static String mask(String email) {
     final at = email.indexOf('@');
     if (at <= 0) return email;

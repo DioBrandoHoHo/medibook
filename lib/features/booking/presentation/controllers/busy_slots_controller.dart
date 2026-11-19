@@ -9,8 +9,6 @@ import '../../../appointments/presentation/controllers/appointments_controller.d
 import '../../domain/entities/busy_slot.dart';
 
 /// Giữ danh sách khung giờ ĐÃ CÓ NGƯỜI ĐẶT của mọi bác sĩ, cho khu vực Customer.
-/// Trang chủ, danh sách bác sĩ và màn thông tin bác sĩ đều tính "còn trống" từ danh sách này,
-/// nên số ca trống ở mọi nơi luôn khớp nhau và đổi ngay khi có người đặt / hủy / bị từ chối.
 class BusySlotsController extends ChangeNotifier {
   BusySlotsController(this._repository);
 

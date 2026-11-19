@@ -1,14 +1,11 @@
-/// Xử lý số điện thoại Việt Nam (logic thuần Dart, không phụ thuộc UI/Firebase).
+/// Xử lý số điện thoại Việt Nam.
 abstract final class PhoneUtils {
   /// Miền email nội bộ dùng để quy đổi SĐT sang tài khoản Email/Password của Firebase.
   static const authEmailDomain = 'medibook.local';
 
-  // Di động VN sau khi chuẩn hoá: 0 + đầu số 3/5/7/8/9 + 8 chữ số = 10 chữ số.
   static final _vnMobile = RegExp(r'^0[35789]\d{8}$');
 
-  /// Chuẩn hoá về dạng `0xxxxxxxxx`:
-  /// bỏ khoảng trắng, dấu chấm, gạch, ngoặc; đổi tiền tố `+84`/`84` thành `0`.
-  /// Trả về chuỗi đã làm sạch (có thể vẫn chưa hợp lệ – dùng [isValid] để kiểm tra).
+  /// Chuẩn hoá về dạng `0xxxxxxxxx`.
   static String normalize(String input) {
     var s = input.trim().replaceAll(RegExp(r'[\s.\-()]'), '');
     if (s.startsWith('+84')) {
@@ -22,6 +19,6 @@ abstract final class PhoneUtils {
   /// SĐT (sau chuẩn hoá) có đúng định dạng di động Việt Nam không.
   static bool isValid(String input) => _vnMobile.hasMatch(normalize(input));
 
-  /// `0912 345 678` -> `0912345678@medibook.local`.
+  /// Quy đổi SĐT sang email nội bộ.
   static String toAuthEmail(String input) => '${normalize(input)}@$authEmailDomain';
 }

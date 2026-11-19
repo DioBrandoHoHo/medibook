@@ -5,10 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/app_date_utils.dart';
 import '../../domain/staff_home_summary.dart';
 
-/// Thẻ "Có X lịch đặt mới cần xử lý". X = số lịch Pending ở mọi ngày.
-///
-/// Dưới tiêu đề có thêm dòng chia nhỏ X (hôm nay / ngày khác) và lịch chờ gần nhất – tất cả lấy từ [StaffHomeSummary], thẻ không tự đếm.
-/// Nhờ dòng "Hôm nay …" người dùng hiểu vì sao X có thể lớn hơn chỉ số "Chờ xác nhận" hôm nay.
+/// Thẻ "Có X lịch đặt mới cần xử lý".
 class PendingNoticeCard extends StatelessWidget {
   const PendingNoticeCard({
     super.key,
@@ -25,8 +22,6 @@ class PendingNoticeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final count = summary.pendingAllDays;
     final hasPending = count > 0;
-    // Có lịch chờ = việc cần làm -> thẻ trắng nổi bật với điểm nhấn cam (màu của "Chờ xác nhận");
-    // không còn lịch chờ -> thẻ xanh nhạt nhẹ nhàng.
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),

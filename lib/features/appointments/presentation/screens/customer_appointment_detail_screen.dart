@@ -16,11 +16,7 @@ import '../controllers/appointments_controller.dart';
 import '../widgets/customer_cancel.dart';
 import '../widgets/status_chip.dart';
 
-/// Chi tiết lịch hẹn cho Customer (lich_hen.txt mục 6): thông tin lịch, giải thích trạng thái,
-/// nút Hủy lịch (nếu còn hủy được) hoặc Đặt lại với bác sĩ này.
-///
-/// Màn chỉ nhận id rồi đọc lịch từ [AppointmentsController] – cùng danh sách với tab Lịch hẹn
-/// và Trang chủ – nên Staff xác nhận / từ chối trong lúc khách đang xem thì màn đổi ngay.
+/// Chi tiết lịch hẹn cho Customer.
 class CustomerAppointmentDetailScreen extends StatefulWidget {
   const CustomerAppointmentDetailScreen({super.key, required this.appointmentId});
 
@@ -139,7 +135,6 @@ class _State extends State<CustomerAppointmentDetailScreen> {
                 _Row(
                   name: 'patient',
                   label: AppStrings.fieldPatient,
-                  // Tên lưu trong lịch tại thời điểm đặt + SĐT của hồ sơ đang đăng nhập.
                   value: [a.customerName, if (user != null) user.phone].join('\n'),
                   isLast: true,
                 ),

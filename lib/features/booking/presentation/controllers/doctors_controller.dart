@@ -8,8 +8,7 @@ import '../../../appointments/presentation/controllers/appointments_controller.d
 import '../../domain/entities/doctor.dart';
 import '../../domain/repositories/doctor_repository.dart';
 
-/// Giữ danh sách bác sĩ: Staff dùng ở tab Lịch làm việc, Customer dùng ở Trang chủ + Đặt lịch.
-/// Cùng cách hoạt động với AppointmentsController: lắng nghe stream, không tự sửa dữ liệu.
+/// Giữ danh sách bác sĩ.
 class DoctorsController extends ChangeNotifier {
   DoctorsController(this._repository);
 

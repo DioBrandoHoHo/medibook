@@ -7,8 +7,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../auth/presentation/controllers/auth_controller.dart';
 
-/// Màn khởi động ngắn: kiểm tra phiên đã lưu để tự đăng nhập lại.
-/// Còn phiên -> vào thẳng trang chính theo vai trò; không -> màn Welcome.
+/// Màn khởi động ngắn.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
