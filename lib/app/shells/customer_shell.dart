@@ -7,6 +7,7 @@ import '../../core/constants/app_strings.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/app_date_utils.dart';
 import '../../features/appointments/presentation/controllers/appointments_controller.dart';
+import '../../features/appointments/presentation/screens/customer_appointment_detail_screen.dart';
 import '../../features/appointments/presentation/screens/customer_appointments_screen.dart';
 import '../../features/auth/presentation/controllers/auth_controller.dart';
 import '../../features/booking/presentation/controllers/busy_slots_controller.dart';
@@ -14,6 +15,7 @@ import '../../features/booking/presentation/controllers/doctors_controller.dart'
 import '../../features/booking/presentation/screens/booking_screen.dart';
 import '../../features/home/domain/customer_home_summary.dart';
 import '../../features/home/presentation/screens/customer_home_screen.dart';
+import '../../features/notifications/presentation/controllers/customer_alerts_controller.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import 'customer_nav_controller.dart';
 
@@ -34,6 +36,8 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
   late final AppointmentsController _appointments;
   late final DoctorsController _doctors;
   late final BusySlotsController _busySlots;
+  late final CustomerAlertsController _alerts;
+  StreamSubscription<String>? _openSub;
   Timer? _clockTimer;
 
   static const _pages = <Widget>[
@@ -51,6 +55,10 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
     _doctors = context.read<DoctorsController>()..start();
     _busySlots = context.read<BusySlotsController>()
       ..start(AppDateUtils.dayOnly(_appointments.now));
+    // Thông báo / nhắc lịch: nghe chính danh sách lịch của khách; bấm thông báo -> mở đúng lịch.
+    _alerts = context.read<CustomerAlertsController>();
+    _openSub = _alerts.openRequests.listen(_openAppointment);
+    unawaited(_alerts.start(userId, _appointments));
     WidgetsBinding.instance.addObserver(this);
     // Mỗi phút tính lại theo giờ hiện tại: khung vừa tới giờ thành "đã qua",
     // lịch vừa tới giờ rời khỏi "sắp tới".
@@ -62,8 +70,18 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
     _appointments.refreshClock();
+    unawaited(_alerts.refreshSystemStatus()); // có thể vừa bật / tắt thông báo trong Cài đặt
     // Vừa bấm liên kết xác minh email khôi phục trong ứng dụng email -> tiếp tục phiên ngầm.
     context.read<AuthController>().checkPendingRecovery();
+  }
+
+  /// Bấm vào thông báo lịch hẹn -> sang tab Lịch hẹn và mở Chi tiết của đúng lịch đó.
+  void _openAppointment(String appointmentId) {
+    if (!mounted) return;
+    _nav.selectTab(CustomerNavController.appointmentsTab);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) CustomerAppointmentDetailScreen.open(context, appointmentId);
+    });
   }
 
   void _onTabSelected(int index) {
@@ -75,6 +93,8 @@ class _CustomerShellState extends State<CustomerShell> with WidgetsBindingObserv
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _clockTimer?.cancel();
+    _openSub?.cancel();
+    _alerts.stop(); // đăng xuất -> huỷ lời nhắc của tài khoản này
     _appointments.stop();
     _doctors.stop();
     _busySlots.stop();

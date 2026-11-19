@@ -7,6 +7,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../appointments/presentation/controllers/appointments_controller.dart';
 import '../../../booking/presentation/widgets/doctor_card.dart';
 import '../../../home/domain/customer_home_summary.dart';
+import '../../../notifications/presentation/controllers/customer_alerts_controller.dart';
 import 'staff_account_screen.dart';
 
 /// Tab "Cá nhân" của Customer (thong_tin.txt phần 2).
@@ -22,8 +23,67 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) => const AccountView(
         title: AppStrings.personalTitle,
         roleLabel: AppStrings.roleCustomer,
-        extra: _MyAppointmentsCard(),
+        extra: Column(
+          children: [
+            _MyAppointmentsCard(),
+            SizedBox(height: 14),
+            _AlertsCard(),
+          ],
+        ),
       );
+}
+
+/// Công tắc "Thông báo lịch hẹn": báo khi phòng khám xác nhận / từ chối và nhắc trước giờ khám.
+/// Nếu hệ điều hành đang chặn thông báo của app thì hiện dòng hướng dẫn bật lại trong Cài đặt.
+class _AlertsCard extends StatelessWidget {
+  const _AlertsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final alerts = context.watch<CustomerAlertsController>();
+    final blocked = alerts.enabled && !alerts.systemEnabled;
+    return SectionCard(
+      key: const ValueKey('alerts_card'),
+      child: Column(
+        children: [
+          SwitchListTile(
+            key: const ValueKey('alerts_switch'),
+            value: alerts.enabled,
+            onChanged: alerts.setEnabled,
+            activeTrackColor: AppColors.primary,
+            contentPadding: const EdgeInsets.fromLTRB(16, 4, 10, 4),
+            secondary: const Icon(Icons.notifications_active_outlined, color: AppColors.primary),
+            title: const Text(
+              AppStrings.alertsSettingTitle,
+              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            ),
+            subtitle: Text(
+              alerts.enabled
+                  ? '${AppStrings.alertsSettingHint}\n${AppStrings.alertsUpcoming(alerts.scheduledCount)}'
+                  : AppStrings.alertsSettingHint,
+              key: const ValueKey('alerts_subtitle'),
+              style: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary, height: 1.35),
+            ),
+          ),
+          if (blocked)
+            Container(
+              key: const ValueKey('alerts_blocked'),
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.warningLight,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                AppStrings.alertsBlocked,
+                style: TextStyle(fontSize: 12.5, color: AppColors.warningDark),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Số lịch hẹn sắp tới của khách – tính bằng [CustomerHomeSummary], cùng hàm với Trang chủ,

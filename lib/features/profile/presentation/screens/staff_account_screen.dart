@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -87,6 +88,9 @@ class _AccountViewState extends State<AccountView> {
           child: user == null
               ? const SizedBox.shrink() // đang đăng xuất, router sắp chuyển trang
               : ListView(
+                  // Trang ngắn (vài thẻ) -> dựng sẵn cả trang, kể cả phần dưới mép màn hình
+                  // (thẻ Bảo mật / Đăng xuất) để cuộn mượt và luôn tìm thấy khi cần.
+                  scrollCacheExtent: const ScrollCacheExtent.pixels(2000),
                   padding: const EdgeInsets.fromLTRB(16, 10, 16, 28),
                   children: [
                     Padding(

@@ -11,7 +11,10 @@ import '../features/auth/presentation/controllers/auth_controller.dart';
 import '../features/booking/domain/repositories/doctor_repository.dart';
 import '../features/booking/presentation/controllers/busy_slots_controller.dart';
 import '../features/booking/presentation/controllers/doctors_controller.dart';
+import '../features/notifications/data/alert_store.dart';
+import '../features/notifications/data/local_notifications.dart';
 import '../features/notifications/domain/repositories/notification_repository.dart';
+import '../features/notifications/presentation/controllers/customer_alerts_controller.dart';
 import '../features/notifications/presentation/controllers/notifications_controller.dart';
 import '../features/profile/data/avatar_picker.dart';
 import '../features/profile/domain/repositories/profile_repository.dart';
@@ -28,6 +31,8 @@ class MediBookApp extends StatefulWidget {
     required this.doctorRepository,
     this.clock,
     this.avatarPicker,
+    this.localNotifications,
+    this.alertStore,
   });
 
   final AuthRepository authRepository;
@@ -41,6 +46,11 @@ class MediBookApp extends StatefulWidget {
 
   /// Chọn + xử lý ảnh đại diện (mặc định thư viện ảnh của điện thoại; test truyền bản giả).
   final AvatarPicker? avatarPicker;
+
+  /// Thông báo của hệ điều hành + bộ nhớ trên máy cho thông báo / nhắc lịch của khách hàng
+  /// (mặc định bản thật; test truyền bản giả).
+  final LocalNotifications? localNotifications;
+  final AlertStore? alertStore;
 
   @override
   State<MediBookApp> createState() => _MediBookAppState();
@@ -62,6 +72,10 @@ class _MediBookAppState extends State<MediBookApp> {
   late final DoctorsController _doctors = DoctorsController(widget.doctorRepository);
   late final BusySlotsController _busySlots = BusySlotsController(widget.appointmentRepository);
   late final AvatarPicker _avatarPicker = widget.avatarPicker ?? ImagePickerAvatarPicker();
+  late final CustomerAlertsController _customerAlerts = CustomerAlertsController(
+    widget.localNotifications ?? PluginLocalNotifications(),
+    widget.alertStore ?? PrefsAlertStore(),
+  );
 
   @override
   void dispose() {
@@ -71,6 +85,7 @@ class _MediBookAppState extends State<MediBookApp> {
     _notifications.dispose();
     _doctors.dispose();
     _busySlots.dispose();
+    _customerAlerts.dispose();
     super.dispose();
   }
 
@@ -89,6 +104,7 @@ class _MediBookAppState extends State<MediBookApp> {
         ChangeNotifierProvider<NotificationsController>.value(value: _notifications),
         ChangeNotifierProvider<DoctorsController>.value(value: _doctors),
         ChangeNotifierProvider<BusySlotsController>.value(value: _busySlots),
+        ChangeNotifierProvider<CustomerAlertsController>.value(value: _customerAlerts),
       ],
       child: MaterialApp.router(
         title: AppStrings.appName,

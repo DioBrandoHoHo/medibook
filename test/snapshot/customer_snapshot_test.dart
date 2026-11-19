@@ -15,6 +15,7 @@ import 'package:medibook/features/appointments/domain/entities/appointment_statu
 import 'package:medibook/features/booking/presentation/widgets/doctor_card.dart';
 import 'package:medibook/features/home/domain/demo_data.dart';
 
+import '../mocks/fake_alerts.dart';
 import '../mocks/fake_clinic_repositories.dart';
 import '../mocks/fake_repositories.dart';
 
@@ -64,6 +65,8 @@ void main() {
           notificationRepository: FakeNotificationRepository(),
           doctorRepository: FakeDoctorRepository(initial: doctors),
           clock: () => now,
+          localNotifications: FakeLocalNotifications(),
+          alertStore: MemoryAlertStore(),
         ),
       ),
     );

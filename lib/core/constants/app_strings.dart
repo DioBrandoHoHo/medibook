@@ -196,6 +196,28 @@ abstract final class AppStrings {
   static const discardChanges = 'Bỏ thay đổi';
   static const keepEditing = 'Tiếp tục sửa';
 
+  // Thông báo / nhắc lịch cho khách hàng (lich_hen.txt – Phần bổ sung N)
+  static const alertChannelName = 'Lịch hẹn khám';
+  static const alertChannelDescription =
+      'Báo khi phòng khám xác nhận / từ chối lịch và nhắc trước giờ khám';
+  static const alertConfirmedTitle = 'Lịch khám đã được xác nhận';
+  static String alertConfirmedBody(String who, String when) =>
+      '$who • $when. Vui lòng đến đúng giờ.';
+  static const alertRejectedTitle = 'Lịch khám không được xác nhận';
+  static String alertRejectedBody(String service, String when) =>
+      'Phòng khám không nhận lịch $service lúc $when. Bạn có thể đặt lịch khác.';
+  static const reminderDayTitle = 'Nhắc lịch khám ngày mai';
+  static const reminderHourTitle = 'Còn 1 giờ nữa tới lịch khám';
+  static String reminderBody(String service, String who, String time) =>
+      '$service với $who lúc $time. Vui lòng đến trước 10–15 phút.';
+  static const alertsSettingTitle = 'Thông báo lịch hẹn';
+  static const alertsSettingHint =
+      'Báo khi phòng khám xác nhận / từ chối lịch và nhắc trước giờ khám 1 ngày, 1 giờ.';
+  static const alertsBlocked =
+      'Thông báo của MediBook đang bị tắt trong Cài đặt của điện thoại. Hãy bật lại để nhận nhắc lịch.';
+  static String alertsUpcoming(int count) =>
+      count == 0 ? 'Chưa có lời nhắc nào' : 'Đang hẹn $count lời nhắc';
+
   // Ảnh đại diện (thong_tin.txt – Phần bổ sung A)
   static const avatarTitle = 'Ảnh đại diện';
   static const avatarChange = 'Đổi ảnh đại diện';

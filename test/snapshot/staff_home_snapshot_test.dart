@@ -12,6 +12,7 @@ import 'package:medibook/app/app.dart';
 import 'package:medibook/features/auth/domain/entities/user_role.dart';
 import 'package:medibook/features/home/domain/demo_data.dart';
 
+import '../mocks/fake_alerts.dart';
 import '../mocks/fake_clinic_repositories.dart';
 import '../mocks/fake_repositories.dart';
 
@@ -52,6 +53,8 @@ void main() {
           notificationRepository: FakeNotificationRepository(initial: data.notifications),
           doctorRepository: FakeDoctorRepository(initial: data.doctors),
           clock: () => now,
+          localNotifications: FakeLocalNotifications(),
+          alertStore: MemoryAlertStore(),
         ),
       ),
     );

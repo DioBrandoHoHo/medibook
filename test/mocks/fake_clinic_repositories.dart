@@ -79,6 +79,13 @@ class FakeAppointmentRepository implements AppointmentRepository {
   @override
   Stream<List<BusySlot>> watchBusySlots(DateTime from) => watchAll().map(busySlotsOf);
 
+  /// Thay một lịch bằng bản mới cùng id (VD dữ liệu bị sửa trên Console – đổi giờ).
+  Future<void> replace(Appointment appointment) async {
+    final i = _items.indexWhere((a) => a.id == appointment.id);
+    _items[i] = appointment;
+    _emit();
+  }
+
   /// Thêm một lịch từ "bên ngoài" (VD một khách hàng khác vừa đặt).
   void addExternal(Appointment appointment) {
     _items.add(appointment);

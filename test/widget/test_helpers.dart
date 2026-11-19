@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medibook/app/app.dart';
 import 'package:medibook/core/constants/app_strings.dart';
+import 'package:medibook/features/notifications/data/alert_store.dart';
+import 'package:medibook/features/notifications/data/local_notifications.dart';
 import 'package:medibook/features/profile/data/avatar_picker.dart';
 
+import '../mocks/fake_alerts.dart';
 import '../mocks/fake_clinic_repositories.dart';
 import '../mocks/fake_repositories.dart';
 
@@ -24,6 +27,8 @@ Future<void> pumpApp(
   FakeDoctorRepository? doctorRepo,
   DateTime Function()? clock,
   AvatarPicker? avatarPicker,
+  LocalNotifications? localNotifications,
+  AlertStore? alertStore,
 }) async {
   usePhoneScreen(tester);
   await tester.pumpWidget(
@@ -36,6 +41,9 @@ Future<void> pumpApp(
       doctorRepository: doctorRepo ?? FakeDoctorRepository(),
       clock: clock,
       avatarPicker: avatarPicker,
+      // Mặc định bản giả: test không bao giờ gọi plugin thông báo / bộ nhớ thật của điện thoại.
+      localNotifications: localNotifications ?? FakeLocalNotifications(),
+      alertStore: alertStore ?? MemoryAlertStore(),
     ),
   );
   await tester.pumpAndSettle();
