@@ -1,7 +1,6 @@
 rules_version = '2';
 
-// Security Rules cho MediBook – dán vào Firebase Console > Firestore > Rules.
-// Phân quyền được kiểm soát ở phía server, không phụ thuộc giao diện app.
+// Security Rules cho MediBook
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -9,7 +8,7 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Document giữ khung giờ của bác sĩ: busy_slots/{doctorId}_{giờ bắt đầu tính bằng mili-giây}.
+    // busy_slots/{doctorId}_{startAt ms}
     function busySlotPath(doctorId, startAt) {
       return /databases/$(database)/documents/busy_slots/$(doctorId + '_' + string(startAt.toMillis()));
     }
@@ -23,8 +22,7 @@ service cloud.firestore {
       // Chủ tài khoản đọc hồ sơ của mình; Staff được đọc hồ sơ khách hàng.
       allow read: if signedIn() && (request.auth.uid == uid || isStaff());
 
-      // Tự đăng ký: chỉ được tạo hồ sơ của chính mình, role BẮT BUỘC là 'customer',
-      // và phone phải khớp email đăng nhập (<phone>@medibook.local).
+      // Tự đăng ký: chỉ tạo được tài khoản customer
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(
@@ -37,8 +35,7 @@ service cloud.firestore {
         && request.resource.data.fullName.size() > 0
         && request.auth.token.email == request.resource.data.phone + '@medibook.local';
 
-      // Chỉ được sửa họ tên / thông tin cá nhân / ảnh đại diện / trạng thái hồ sơ;
-      // KHÔNG được đổi role hay phone.
+      // Không được đổi role và phone
       allow update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys()
@@ -47,7 +44,7 @@ service cloud.firestore {
         && request.resource.data.fullName is string
         && request.resource.data.fullName.size() > 0
         && request.resource.data.get('profilePromptDismissed', false) is bool
-        // Trang thông tin (thong_tin.txt): email liên hệ, ngày sinh yyyy-MM-dd, giới tính – đều tuỳ chọn.
+        // email, ngày sinh, giới tính (tuỳ chọn)
         && request.resource.data.get('email', '') is string
         && request.resource.data.get('email', '').size() <= 100
         && (request.resource.data.get('birthDate', null) == null
@@ -55,23 +52,20 @@ service cloud.firestore {
                 && request.resource.data.birthDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')))
         && (request.resource.data.get('gender', null) == null
             || request.resource.data.gender in ['male', 'female', 'other'])
-        // Ảnh đại diện: JPEG 256x256 đã nén, mã hoá base64 ('' = chưa có / đã xoá).
-        // Giới hạn 200.000 ký tự (~150 KB) để document luôn nhỏ – app thực tế chỉ ghi ~20–45 KB.
+        // Ảnh đại diện base64
         && request.resource.data.get('avatar', '') is string
         && request.resource.data.get('avatar', '').size() <= 200000;
 
       allow delete: if false;
     }
 
-    // ----- BẢNG TRA SĐT -> EMAIL ĐĂNG NHẬP (Quên mật khẩu, dang_ky_dang_nhap.txt phần bổ sung) -----
-    // Người dùng đăng nhập bằng SĐT; khi tài khoản đã đặt email khôi phục, app cần biết email
-    // đăng nhập thật TRƯỚC khi đăng nhập -> phải cho đọc khi chưa đăng nhập, nhưng chỉ đọc
-    // được từng document theo đúng SĐT (không liệt kê được cả collection).
+    // ----- TRA SĐT -> EMAIL ĐĂNG NHẬP -----
+    // Đọc được khi chưa đăng nhập nhưng chỉ get từng SĐT, không list được
     match /login_index/{phone} {
       allow get: if true;
       allow list: if false;
 
-      // Chỉ chủ tài khoản ghi được bản ghi của CHÍNH SĐT mình.
+      // Chỉ chủ tài khoản ghi được
       allow create, update: if signedIn()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.phone == phone
         && request.resource.data.keys().hasOnly(['uid', 'emails', 'updatedAt'])
@@ -89,8 +83,7 @@ service cloud.firestore {
       allow read: if isStaff()
         || (signedIn() && resource.data.customerId == request.auth.uid);
 
-      // Customer đặt lịch: chỉ cho chính mình, trạng thái BẮT BUỘC là 'pending', không phải dữ liệu mẫu.
-      // Staff chỉ được tạo dữ liệu mẫu (isDemo == true).
+      // Customer đặt lịch cho chính mình, trạng thái pending; Staff chỉ tạo dữ liệu mẫu
       allow create: if (signedIn()
           && request.resource.data.customerId == request.auth.uid
           && request.resource.data.status == 'pending'
@@ -105,10 +98,9 @@ service cloud.firestore {
           && request.resource.data.startAt is timestamp
           && request.resource.data.endAt is timestamp
           && request.resource.data.endAt > request.resource.data.startAt
-          // Chỉ đặt trước tối đa 180 ngày (dat_lich.txt phần bổ sung C, BookingWindow.days trong code – đổi thì sửa cả hai).
+          // Đặt trước tối đa 180 ngày (khớp BookingWindow.days)
           && request.resource.data.startAt < request.time + duration.value(180, 'd')
-          // Chống đặt trùng (dat_lich.txt 7): lịch có bác sĩ PHẢI giữ được khung giờ của bác sĩ đó
-          // trong cùng lần ghi. Khung đã có người giữ thì không tạo được -> cả lần ghi bị từ chối.
+          // Chống đặt trùng: phải giữ được busy_slot trong cùng lần ghi
           && (!('doctorId' in request.resource.data)
               || (existsAfter(busySlotPath(request.resource.data.doctorId, request.resource.data.startAt))
                   && getAfter(busySlotPath(request.resource.data.doctorId, request.resource.data.startAt))
@@ -116,18 +108,17 @@ service cloud.firestore {
         || (isStaff() && request.resource.data.isDemo == true);
 
       allow update: if
-        // Staff xác nhận / từ chối: chỉ lịch đang chờ, chỉ được đổi trạng thái.
+        // Staff xác nhận / từ chối lịch đang chờ
         (isStaff()
           && resource.data.status == 'pending'
           && request.resource.data.status in ['confirmed', 'rejected']
           && request.resource.data.diff(resource.data).affectedKeys()
                .hasOnly(['status', 'updatedAt']))
-        // Staff tạo lại dữ liệu mẫu: chỉ ghi đè lên bản ghi mẫu, không đụng lịch thật.
+        // Staff ghi lại dữ liệu mẫu
         || (isStaff()
           && resource.data.isDemo == true
           && request.resource.data.isDemo == true)
-        // Customer hủy lịch của chính mình (lich_hen.txt 3.4): lịch chưa tới giờ khám;
-        // lịch ĐÃ XÁC NHẬN chỉ hủy được khi còn ít nhất 2 giờ trước giờ khám.
+        // Customer hủy lịch của mình (lịch đã xác nhận: trước giờ khám ít nhất 2 giờ)
         || (signedIn()
           && resource.data.customerId == request.auth.uid
           && resource.data.status in ['pending', 'confirmed']
@@ -141,13 +132,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ----- BÁC SĨ (lich_lam_viec.txt) -----
+    // ----- BÁC SĨ -----
     match /doctors/{id} {
       // Mọi người dùng đã đăng nhập được xem bác sĩ (Customer cần khi đặt lịch).
       allow read: if signedIn();
 
-      // App chưa có màn quản lý bác sĩ: Staff chỉ được ghi bác sĩ MẪU,
-      // và không được ghi đè lên bác sĩ thật (nhập trên Console).
+      // Staff chỉ ghi được bác sĩ mẫu
       allow create: if isStaff() && request.resource.data.isDemo == true;
       allow update: if isStaff()
         && resource.data.isDemo == true
@@ -156,16 +146,12 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ----- KHUNG GIỜ ĐÃ CÓ NGƯỜI ĐẶT (dat_lich.txt) -----
-    // Chỉ chứa bác sĩ + giờ + mã lịch, KHÔNG chứa tên hay thông tin khách hàng, nên mọi người dùng
-    // đã đăng nhập được đọc để biết bác sĩ còn trống khung nào. Customer không đọc được lịch hẹn
-    // của người khác.
+    // ----- KHUNG GIỜ ĐÃ CÓ NGƯỜI ĐẶT -----
+    // Không chứa thông tin khách hàng nên ai đăng nhập cũng đọc được
     match /busy_slots/{slotId} {
       allow read: if signedIn();
 
-      // Customer giữ khung cùng lúc với việc tạo lịch hẹn của chính mình. Vì id document là duy nhất
-      // cho (bác sĩ, khung giờ) và Customer KHÔNG có quyền update, người đến sau không ghi đè được.
-      // Staff chỉ được tạo khung của dữ liệu mẫu.
+      // Customer giữ khung cùng lúc với tạo lịch hẹn; Staff chỉ tạo khung mẫu
       allow create: if (signedIn()
           && request.resource.data.keys().hasOnly(['doctorId', 'startAt', 'appointmentId', 'isDemo'])
           && request.resource.data.isDemo == false
@@ -182,13 +168,12 @@ service cloud.firestore {
                .data.endAt > request.resource.data.startAt)
         || (isStaff() && request.resource.data.isDemo == true);
 
-      // Chỉ Staff ghi lại khung của dữ liệu mẫu.
+      // Staff ghi lại khung mẫu
       allow update: if isStaff()
         && resource.data.isDemo == true
         && request.resource.data.isDemo == true;
 
-      // Trả lại khung: Staff (khi từ chối lịch / tạo lại dữ liệu mẫu) hoặc chính khách hàng
-      // đã đặt lịch đó (khi hủy lịch).
+      // Trả lại khung khi từ chối / hủy lịch
       allow delete: if isStaff()
         || (signedIn()
           && get(/databases/$(database)/documents/appointments/$(resource.data.appointmentId))
@@ -199,9 +184,7 @@ service cloud.firestore {
     match /notifications/{id} {
       allow read: if isStaff();
 
-      // Customer tạo thông báo "lịch đặt mới" / "lịch hẹn đã hủy" cùng lúc với việc đặt / hủy
-      // lịch hẹn của chính mình.
-      // Staff chỉ được tạo thông báo mẫu.
+      // Customer tạo thông báo khi đặt / hủy lịch; Staff chỉ tạo thông báo mẫu
       allow create: if (signedIn()
           && request.resource.data.createdBy == request.auth.uid
           && request.resource.data.isRead == false
@@ -213,11 +196,11 @@ service cloud.firestore {
         || (isStaff() && request.resource.data.isDemo == true);
 
       allow update: if
-        // Staff đánh dấu đã đọc: chỉ được đổi isRead thành true.
+        // Staff đánh dấu đã đọc
         (isStaff()
           && request.resource.data.isRead == true
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']))
-        // Staff tạo lại thông báo mẫu.
+        // Staff ghi lại thông báo mẫu
         || (isStaff()
           && resource.data.isDemo == true
           && request.resource.data.isDemo == true);
